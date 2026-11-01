@@ -14,3 +14,4 @@ runs/
 results/dev/*.preds.jsonl
 results/env_check.txt
 viz/ksfo_overpass_raw.json
+.venv/

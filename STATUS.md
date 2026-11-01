@@ -3,7 +3,7 @@
 _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/score.py` / `08_latency_bench.py` output. No keys.)_
 
 ## Run summary
-- started (UTC):
+- started (UTC): 2026-11-01T02:36Z
 - machine: spark-6771 — see `results/env_check.txt`
 - phases completed: 0 1 2 3 4 5 6 7 8  _(strike through what did not finish)_
 
@@ -35,7 +35,8 @@ _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/
 - scenario(s) built:
 
 ## Problems / open questions for Monday
--
+- Phase 0: host has no torch; data scripts run in in-repo `.venv` (datasets/pyarrow/hf_hub); fine-tune runs in `nvcr.io/nvidia/pytorch:25.11-py3`. No teacher API key set → local vLLM teacher on :8002.
+- Phase 0: SSD teacher folders are `reasoning/nemotron-3-nano-30b-a3b-nvfp4` and `reasoning/qwen3.5-35b-a3b-fp8` (not the names in CLAUDE.md). Port 8080 is taken by `openshell-gateway` → viz served on another port.
 
 ## Left running
 - vLLM `atc-qwen3-8b` on :8001 (container `vllm-atc-qwen3-8b`): yes / no
