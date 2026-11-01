@@ -5,7 +5,7 @@ _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/
 ## Run summary
 - started (UTC): 2026-11-01T02:36Z
 - machine: spark-6771 — see `results/env_check.txt`
-- phases completed: 0 1 2 3 4 5 6 7 8  _(strike through what did not finish)_
+- phases completed: 0 1 2 3 4 5 6 7 8 — all ran; deviations: 1 epoch instead of 2, Nemotron-Nano student skipped, viz on :8081, pseudo cap 3000/source
 
 ## Data
 - ATCO2 split verified against committed hash: **yes** (8660e6de…; train 504 / dev 85 / test 288). Action table OTHER = 5 spans (≈0.6 %).
@@ -58,8 +58,12 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 - Dev few-shot leakage: `bench/infer.py` takes shots from the **first N dev rows**, and those rows are also scored, so the 5-shot base arm is slightly flattered on dev. On test this does not apply (shots from dev, scored on test).
 - `bench/infer.py` defaults `--split` to `data/splits/test.jsonl` — every call today passed `--split` explicitly. Consider changing the default before Monday.
 - `scripts/07_eval_dev.sh` had no way to disable Qwen3 thinking; added optional `EXTRA` passthrough (used for both arms today).
+- Monday: Nemotron-Nano-8B student not trained; Fireworks SFT on `data/sft/mix_train.jsonl` (9478 rows) is the planned final run. If retraining on the Spark, use response-only loss (unsloth or TRL completion-only) and consider 2 epochs (~4 h at measured speed).
 - Phase 0: host has no torch; data scripts run in in-repo `.venv` (datasets/pyarrow/hf_hub); fine-tune runs in `nvcr.io/nvidia/pytorch:25.11-py3`. No teacher API key set → local vLLM teacher on :8002.
 - Phase 0: SSD teacher folders are `reasoning/nemotron-3-nano-30b-a3b-nvfp4` and `reasoning/qwen3.5-35b-a3b-fp8` (not the names in CLAUDE.md). Port 8080 is taken by `openshell-gateway` → viz served on another port.
 
 ## Left running
-- vLLM `atc-qwen3-8b` on :8001 (container `vllm-atc-qwen3-8b`): yes / no
+- vLLM `atc-qwen3-8b` on :8001 (container `vllm-atc-qwen3-8b`): **yes** — `BASE_URL=http://<spark>:8001/v1`, pass `"chat_template_kwargs":{"enable_thinking":false}`
+- viz static server on :8081 (`python3 -m http.server`, from `viz/`): **yes**
+- container `atc-train` (pytorch 25.11 + pinned TRL stack, idle, `sleep infinity`): yes — `docker rm -f atc-train` to free it
+- teacher `vllm-teacher` on :8002: stopped. Port 8000 untouched.

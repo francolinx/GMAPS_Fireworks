@@ -20,6 +20,12 @@ Built **before** the event (Oct 31 – Nov 1, 2026), committed with timestamps i
 Pre-event **dry runs** (Nov 1, on the DGX Spark): fine-tunes and dev-split numbers recorded in `STATUS.md`. None of
 them are the submitted results; the frozen test split was first evaluated during the build period.
 
+Pre-event changes made during the Nov 1 Spark dry run (Claude Code, unattended; see `git log`):
+- `scripts/05_finetune_unsloth.py`: compatibility with TRL >= 1.x (`processing_class=`, warmup as ratio via `warmup_steps`)
+- `scripts/07_eval_dev.sh`: optional `EXTRA` passthrough of request fields (used to disable Qwen3 thinking)
+- `viz/scenario_sfo_01r.json`: second scenario (01R) generated with `viz/build_scenario.py`; `viz/ksfo.geojson` refreshed from Overpass
+- dry-run artifacts: local-teacher pseudo-labels (Nemotron-3-Nano-30B-A3B NVFP4), SFT mix (9478 rows), Qwen3-8B LoRA (1 epoch), dev/stress scores, latency sweep, training logs in `results/`
+
 Built **during** the event (Nov 2, 10:30–16:30 PT) — *fill in Monday*:
 - frontier baseline run on the test split (model, version, prompt version)
 - Fireworks SFT job(s) (ids), deployment(s), the submitted fine-tuned model
