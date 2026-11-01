@@ -78,14 +78,18 @@ def main():
     train = ds["train"].map(fmt, remove_columns=[c for c in ds["train"].column_names if c != "text"])
     dev = ds["dev"].map(fmt, remove_columns=[c for c in ds["dev"].column_names if c != "text"])
 
+    import inspect
     from trl import SFTTrainer, SFTConfig
+    # TRL >= 1.x dropped warmup_ratio (warmup_steps < 1 is a ratio) and renamed tokenizer= to processing_class=
+    warmup = {"warmup_ratio": 0.05} if "warmup_ratio" in inspect.signature(SFTConfig.__init__).parameters else {"warmup_steps": 0.05}
     cfg = SFTConfig(
         output_dir=os.path.join(args.out, "ckpt"), per_device_train_batch_size=args.bsz, gradient_accumulation_steps=args.grad_accum,
-        num_train_epochs=args.epochs, max_steps=args.max_steps, learning_rate=args.lr, lr_scheduler_type="cosine", warmup_ratio=0.05,
+        num_train_epochs=args.epochs, max_steps=args.max_steps, learning_rate=args.lr, lr_scheduler_type="cosine", **warmup,
         logging_steps=10, eval_strategy="steps", eval_steps=50, save_strategy="no", bf16=True, fp16=False,
         max_length=args.max_seq, dataset_text_field="text", packing=False, report_to="none", seed=42,
     )
-    trainer = SFTTrainer(model=model, tokenizer=tok, train_dataset=train, eval_dataset=dev, args=cfg)
+    tok_kw = "processing_class" if "processing_class" in inspect.signature(SFTTrainer.__init__).parameters else "tokenizer"
+    trainer = SFTTrainer(model=model, train_dataset=train, eval_dataset=dev, args=cfg, **{tok_kw: tok})
     # loss only on the assistant turn (the JSON), not on the prompt
     try:
         from unsloth.chat_templates import train_on_responses_only

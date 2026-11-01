@@ -11,7 +11,7 @@ _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/
 - ATCO2 split verified against committed hash: **yes** (8660e6de…; train 504 / dev 85 / test 288). Action table OTHER = 5 spans (≈0.6 %).
 - external: uwb_atcc kept 12840 / 14113 (leak_dropped 1, dup 252), atcosim kept 7398 / 9539 (leak_dropped 1, dup 1879)
 - synthetic: us_train 3000, us_stress 300 (regenerated; sha256 matches data/synthetic/us_stress.sha256)
-- pseudo-labels: teacher = ______ ; keep rate uwb __ %, atcosim __ %
+- pseudo-labels: teacher = local vLLM `nemotron-3-nano-30b-a3b-nvfp4` (thinking off, 8-shot, json mode); keep rate uwb **73.6 %** (5889 / 8000, capped with --limit 8000), atcosim **81.7 %** (6047 / 7398; drops: empty 747, unknown_action 533, span_not_in_text 71)
 - training mix: __ examples (gold ×2 = __, synthetic __, pseudo __)
 
 ## Fine-tunes

@@ -4,13 +4,14 @@
 #   BASE_URL=http://localhost:8001/v1 API_KEY=none scripts/07_eval_dev.sh atc-qwen3-8b [fewshot]
 #   BASE_URL=https://api.fireworks.ai/inference/v1 API_KEY=$FIREWORKS_API_KEY scripts/07_eval_dev.sh accounts/fireworks/models/qwen3-8b 5
 #
+# EXTRA='{"chat_template_kwargs":{"enable_thinking":false}}' passes request fields through (Qwen3 base arm).
 # Results land in results/dev/<safe-name>.{dev,stress}.preds.jsonl and results/dev/scores.md is appended.
 set -euo pipefail
 MODEL="${1:?model name as served}"; FEWSHOT="${2:-0}"
 SAFE="$(echo "$MODEL" | tr '/:' '__')"
 mkdir -p results/dev
-python3 bench/infer.py --model "$MODEL" --split data/splits/dev.jsonl --out "results/dev/$SAFE.dev.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode}
-python3 bench/infer.py --model "$MODEL" --split data/synthetic/us_stress.jsonl --out "results/dev/$SAFE.stress.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode}
+python3 bench/infer.py --model "$MODEL" --split data/splits/dev.jsonl --out "results/dev/$SAFE.dev.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
+python3 bench/infer.py --model "$MODEL" --split data/synthetic/us_stress.jsonl --out "results/dev/$SAFE.stress.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
 {
   echo; echo "## $MODEL  (fewshot=$FEWSHOT, $(date -u +%FT%TZ))"; echo; echo "### dev (ATCO2 gold, training airports)"
   python3 bench/score.py data/splits/dev.jsonl "results/dev/$SAFE.dev.preds.jsonl" --prices results/prices.json --out "results/dev/$SAFE.dev.scores.json"
