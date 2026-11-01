@@ -1,0 +1,26 @@
+[
+  {
+    "model": "qwen3-8b-base",
+    "file": "qwen3-8b-base.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.8999999999999999,
+    "command_span_f1": 0.5443786982248521,
+    "value_f1": 0.4485981308411215,
+    "action_f1": 0.7785234899328859,
+    "action_exact": 0.7058823529411765,
+    "runway_critical_n": 31,
+    "runway_critical_exact": 0.8387096774193549,
+    "runway_critical_f1": 0.8852459016393444,
+    "role_acc": 0.582089552238806,
+    "full_record_exact": 0.4235294117647059,
+    "latency_p50_ms": 2791.698423003254,
+    "latency_p95_ms": 3748.9840550042572,
+    "latency_mean_ms": 2858.2711960114575,
+    "prompt_tokens": 63733,
+    "completion_tokens": 3185,
+    "cost_usd_total": null,
+    "cost_usd_per_1k_segments": null
+  }
+]

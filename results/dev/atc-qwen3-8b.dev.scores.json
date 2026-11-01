@@ -1,0 +1,26 @@
+[
+  {
+    "model": "atc-qwen3-8b",
+    "file": "atc-qwen3-8b.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9375000000000001,
+    "command_span_f1": 0.6979865771812079,
+    "value_f1": 0.7348837209302326,
+    "action_f1": 0.8571428571428571,
+    "action_exact": 0.8117647058823529,
+    "runway_critical_n": 31,
+    "runway_critical_exact": 0.9354838709677419,
+    "runway_critical_f1": 0.923076923076923,
+    "role_acc": 0.8805970149253731,
+    "full_record_exact": 0.7058823529411765,
+    "latency_p50_ms": 2740.13815500075,
+    "latency_p95_ms": 3718.485179997515,
+    "latency_mean_ms": 2832.0760846702956,
+    "prompt_tokens": 33133,
+    "completion_tokens": 3165,
+    "cost_usd_total": null,
+    "cost_usd_per_1k_segments": null
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "model": "qwen3-8b-base",
+    "file": "qwen3-8b-base.stress.preds.jsonl",
+    "n": 300,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.8180242634315423,
+    "command_span_f1": 0.8235294117647058,
+    "value_f1": 0.6056166056166056,
+    "action_f1": 0.9715099715099716,
+    "action_exact": 0.9466666666666667,
+    "runway_critical_n": 184,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 1.0,
+    "role_acc": 0.6266666666666667,
+    "full_record_exact": 0.47333333333333333,
+    "latency_p50_ms": 2968.815116000769,
+    "latency_p95_ms": 3932.1108459989773,
+    "latency_mean_ms": 3087.1861781268185,
+    "prompt_tokens": 224753,
+    "completion_tokens": 12201,
+    "cost_usd_total": null,
+    "cost_usd_per_1k_segments": null
+  }
+]

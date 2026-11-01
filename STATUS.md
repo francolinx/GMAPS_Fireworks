@@ -25,8 +25,20 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 ## Dev results (paste `results/dev/scores.md` tables)
 
 ### dev (ATCO2 gold, training airports — NOT the test set)
+| arm | JSON valid | Callsign F1 | Cmd span F1 | Value F1 | Action F1 | Runway-critical exact | Role acc | Full record exact | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Qwen3-8B base, 5-shot (thinking off) | 100.0% | 90.0% | 54.4% | 44.9% | 77.9% | 83.9% | 58.2% | 42.4% | 2792 | 3749 |
+| atc-qwen3-8b LoRA, 0-shot | 100.0% | 93.8% | 69.8% | 73.5% | 85.7% | 93.5% | 88.1% | 70.6% | 2740 | 3718 |
+
+(n=85; runway-critical n=31. Latency = client wall clock at concurrency 8, vLLM on the Spark.)
 
 ### synthetic US stress
+| arm | JSON valid | Callsign F1 | Cmd span F1 | Value F1 | Action F1 | Runway-critical exact | Role acc | Full record exact | p50 ms | p95 ms |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Qwen3-8B base, 5-shot (thinking off) | 100.0% | 81.8% | 82.4% | 60.6% | 97.2% | 100.0% | 62.7% | 47.3% | 2969 | 3932 |
+| atc-qwen3-8b LoRA, 0-shot | 100.0% | 97.2% | 99.4% | 96.1% | 100.0% | 100.0% | 99.3% | 96.3% | 2956 | 3967 |
+
+(n=300; runway-critical n=184. Caveat: the fine-tune trained on 2500 rows from the same synthetic generator, so stress is in-distribution for it — not evidence of US generalisation.)
 
 ## Latency (vLLM on Spark, localhost)
 | concurrency | p50 ms | p95 ms | rps |
@@ -37,6 +49,9 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 - scenario(s) built:
 
 ## Problems / open questions for Monday
+- Dev few-shot leakage: `bench/infer.py` takes shots from the **first N dev rows**, and those rows are also scored, so the 5-shot base arm is slightly flattered on dev. On test this does not apply (shots from dev, scored on test).
+- `bench/infer.py` defaults `--split` to `data/splits/test.jsonl` — every call today passed `--split` explicitly. Consider changing the default before Monday.
+- `scripts/07_eval_dev.sh` had no way to disable Qwen3 thinking; added optional `EXTRA` passthrough (used for both arms today).
 - Phase 0: host has no torch; data scripts run in in-repo `.venv` (datasets/pyarrow/hf_hub); fine-tune runs in `nvcr.io/nvidia/pytorch:25.11-py3`. No teacher API key set → local vLLM teacher on :8002.
 - Phase 0: SSD teacher folders are `reasoning/nemotron-3-nano-30b-a3b-nvfp4` and `reasoning/qwen3.5-35b-a3b-fp8` (not the names in CLAUDE.md). Port 8080 is taken by `openshell-gateway` → viz served on another port.
 
