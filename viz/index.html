@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GMAPS Runway Monitor</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  :root{--bg:#070b16;--panel:#0e1526;--line:#1d2a44;--txt:#d7e0f2;--dim:#7f8cab;--cyan:#39d0ff;--amber:#ffb13b;--red:#ff3b5c;--green:#3ddc84;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #app{display:grid;grid-template-columns:360px 1fr 320px;grid-template-rows:48px 1fr 56px;height:100%}
+  header{grid-column:1/4;display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:15px;margin:0;letter-spacing:.08em;font-family:var(--mono)} header .sub{color:var(--dim);font-family:var(--mono);font-size:12px}
+  header .spacer{flex:1} header button,header select{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-family:var(--mono);cursor:pointer}
+  #radio,#state{background:var(--panel);overflow:auto;padding:12px;border-right:1px solid var(--line)} #state{border-right:0;border-left:1px solid var(--line)}
+  #map{position:relative} #map .maplibregl-ctrl-attrib{font-size:10px}
+  h2{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:4px 0 10px;font-family:var(--mono)}
+  .tx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#0b1222;animation:in .25s ease-out}
+  .tx .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim)} .tx .spk{color:var(--cyan)} .tx .spk.pilot{color:var(--amber)}
+  .tx .text{margin:4px 0 6px;font-style:italic} .tx pre{margin:0;font-family:var(--mono);font-size:11px;color:#a9b8d8;white-space:pre-wrap}
+  .chips{margin-top:6px} .chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;background:#1a2a4a;color:var(--cyan);margin-right:4px}
+  .chip.crit{background:#3a1420;color:var(--red)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px} td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{color:var(--dim);font-weight:500}
+  .ok{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)}
+  #alert{display:none;margin-top:12px;border:1px solid var(--red);background:#2a0d16;border-radius:8px;padding:10px;font-family:var(--mono);font-size:12px}
+  #alert.on{display:block;animation:pulse 1s infinite} @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,92,.0)}50%{box-shadow:0 0 0 6px rgba(255,59,92,.25)}}
+  #alert .big{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px} #alert .note{color:var(--dim);margin-top:6px}
+  footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  footer input[type=range]{flex:1} footer button{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono)}
+  #clock{min-width:90px;color:var(--cyan)}
+  .banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:5}
+  .banner.on{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>GMAPS · RUNWAY MONITOR</h1><span class="sub" id="hdr">loading…</span>
+    <span class="spacer"></span>
+    <label class="sub">variant</label>
+    <select id="variant"><option value="unresolved">unresolved</option><option value="resolved">hold-short issued</option></select>
+    <label class="sub">speed</label>
+    <select id="speed"><option>1</option><option selected>2</option><option>4</option><option>8</option></select>
+  </header>
+  <aside id="radio"><h2>RADIO · TRANSCRIPT → PARSED RECORD</h2><div id="txlist"></div></aside>
+  <div id="map"><div class="banner" id="banner">POSSIBLE CONFLICT</div></div>
+  <aside id="state">
+    <h2>CLEARANCE STATE</h2>
+    <table><thead><tr><th>runway</th><th>authorization</th><th>who</th><th>status</th></tr></thead><tbody id="statebody"></tbody></table>
+    <div id="alert"></div>
+    <h2 style="margin-top:16px">LOOK-AHEAD</h2>
+    <table id="lookahead"></table>
+  </aside>
+  <footer>
+    <button id="play">▶ play</button><button id="restart">↺</button>
+    <span id="clock">t = 0.0 s</span>
+    <input type="range" id="scrub" min="0" max="100" step="0.1" value="0">
+    <span class="sub" id="attrib">© OpenStreetMap contributors</span>
+  </footer>
+</div>
+<script>
+const qs = new URLSearchParams(location.search);
+const GEO = qs.get('geo') || 'ksfo.geojson';
+const SCN = qs.get('scenario') || 'scenario_sfo_sim1.json';
+const CRIT = new Set(['CLEARED_TO_LAND','CLEARED_FOR_TAKEOFF','LINE_UP_AND_WAIT','HOLD_SHORT','HOLD_POSITION','CROSS_RUNWAY','BACKTRACK','TOUCH_AND_GO','VACATE_RUNWAY','GO_AROUND']);
+let geo, scn, variant = 'unresolved', t = 0, playing = false, speed = 2, last = null, shown = new Set();
+let lastMapT = -1, lastMapAt = 0, lastConflict = null;
+
+function iconCanvas(kind, color){
+  const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d');
+  g.fillStyle = color; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
+  if (kind === 'vehicle'){ g.rect(12,12,24,24); } else { g.moveTo(24,4); g.lineTo(42,40); g.lineTo(24,32); g.lineTo(6,40); g.closePath(); }
+  g.fill(); g.stroke(); return g.getImageData(0,0,48,48);
+}
+function posAt(path, tt){
+  if (tt <= path[0].t) return {p: path[0].p, b: bearing(path[0].p, path[1].p)};
+  for (let i = 1; i < path.length; i++){
+    if (tt <= path[i].t){ const a = path[i-1], b = path[i]; const f = (b.t - a.t) ? (tt - a.t)/(b.t - a.t) : 1;
+      return {p:[a.p[0] + f*(b.p[0]-a.p[0]), a.p[1] + f*(b.p[1]-a.p[1])], b: bearing(a.p, b.p)}; }
+  }
+  const n = path.length; return {p: path[n-1].p, b: bearing(path[n-2].p, path[n-1].p)};
+}
+function bearing(a, b){ const toR = x => x*Math.PI/180; const y = Math.sin(toR(b[0]-a[0]))*Math.cos(toR(b[1]));
+  const x = Math.cos(toR(a[1]))*Math.sin(toR(b[1])) - Math.sin(toR(a[1]))*Math.cos(toR(b[1]))*Math.cos(toR(b[0]-a[0]));
+  return (Math.atan2(y,x)*180/Math.PI + 360) % 360; }
+
+const map = new maplibregl.Map({ container: 'map', center: [-122.375, 37.619], zoom: 13.6, pitch: 0, attributionControl: false,
+  style: { version: 8, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b16' } }] } });
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap contributors (ODbL) · fictional traffic' }));
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+map.on('load', async () => {
+  [geo, scn] = await Promise.all([fetch(GEO).then(r => r.json()), fetch(SCN).then(r => r.json())]);
+  document.getElementById('hdr').textContent = `${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway} · scenario SIM-1`;
+  map.setCenter(scn.center); map.setZoom(13.9);
+  const tw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'taxiway') };
+  const rw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'runway') };
+  const hp = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'holding_position') };
+  const active = { type:'FeatureCollection', features: [{ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } }] };
+  map.addSource('tw', { type:'geojson', data: tw }); map.addSource('rw', { type:'geojson', data: rw }); map.addSource('hp', { type:'geojson', data: hp });
+  map.addSource('active', { type:'geojson', data: active });
+  map.addSource('zone', { type:'geojson', data: { type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.intersection } }] } });
+  map.addSource('ac', { type:'geojson', data: { type:'FeatureCollection', features: [] } });
+  map.addLayer({ id:'tw', type:'line', source:'tw', paint:{ 'line-color':'#8a7a2a', 'line-width':['interpolate',['linear'],['zoom'],12,1,15,4], 'line-opacity':.8 } });
+  map.addLayer({ id:'rw', type:'line', source:'rw', paint:{ 'line-color':'#5b6478', 'line-width':['interpolate',['linear'],['zoom'],12,4,15,16] } });
+  map.addLayer({ id:'rw-center', type:'line', source:'rw', paint:{ 'line-color':'#c9d1e3', 'line-width':1, 'line-dasharray':[4,4] } });
+  map.addLayer({ id:'active', type:'line', source:'active', paint:{ 'line-color':'#ff3b5c', 'line-width':['interpolate',['linear'],['zoom'],12,5,15,18], 'line-opacity':0 } });
+  map.addLayer({ id:'hp', type:'circle', source:'hp', paint:{ 'circle-radius':3, 'circle-color':'#ffb13b', 'circle-opacity':.9 } });
+  map.addLayer({ id:'tw-label', type:'symbol', source:'tw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':10, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#c8b45a', 'text-halo-color':'#070b16', 'text-halo-width':1 } });
+  map.addLayer({ id:'rw-label', type:'symbol', source:'rw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':13, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#eef2ff', 'text-halo-color':'#070b16', 'text-halo-width':1.5 } });
+  map.addLayer({ id:'zone', type:'circle', source:'zone', paint:{ 'circle-radius':18, 'circle-color':'#ff3b5c', 'circle-opacity':0, 'circle-stroke-color':'#ff3b5c', 'circle-stroke-width':2, 'circle-stroke-opacity':0 } });
+  map.addImage('airliner-cyan', iconCanvas('airliner', '#39d0ff'), { pixelRatio: 2 });
+  map.addImage('vehicle-amber', iconCanvas('vehicle', '#ffb13b'), { pixelRatio: 2 });
+  map.addImage('airliner-red', iconCanvas('airliner', '#ff3b5c'), { pixelRatio: 2 });
+  map.addImage('vehicle-red', iconCanvas('vehicle', '#ff3b5c'), { pixelRatio: 2 });
+  map.addLayer({ id:'ac', type:'symbol', source:'ac', layout:{ 'icon-image':['get','icon'], 'icon-size':.7, 'icon-rotate':['get','bearing'], 'icon-rotation-alignment':'map', 'icon-allow-overlap':true,
+    'text-field':['get','id'], 'text-offset':[0,1.6], 'text-size':12, 'text-font':['Open Sans Regular'], 'text-allow-overlap':true }, paint:{ 'text-color':'#fff', 'text-halo-color':'#070b16', 'text-halo-width':1.5 } });
+  document.getElementById('scrub').max = scn.duration;
+  const la = scn.alert.lookahead;
+  document.getElementById('lookahead').innerHTML =
+    `<tr><th>SIM212 at TWY ${scn.crossing_taxiway}</th><td>t≈${la.lander_at_intersection}s</td></tr>` +
+    `<tr><th>landing roll window</th><td>${la.lander_window[0]}–${la.lander_window[1]} s</td></tr>` +
+    `<tr><th>RESCUE7 on runway</th><td>${la.crosser_window[0]}–${la.crosser_window[1]} s</td></tr>` +
+    `<tr><th>predicted overlap</th><td class="bad">${la.overlap ? la.overlap[0] + '–' + la.overlap[1] + ' s' : 'none'}</td></tr>`;
+  reset(); requestAnimationFrame(tick);
+});
+
+function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; render(); }
+function conflictState(){
+  const v = scn.variants[variant];
+  const resolvedAt = v.transmissions.find(x => x.actions.includes('HOLD_SHORT') && x.parsed.role === 'PILOT');
+  const start = scn.alert.t, end = resolvedAt ? resolvedAt.t : (scn.alert.lookahead.overlap ? scn.alert.lookahead.overlap[1] : scn.duration);
+  return { active: t >= start && t < end, start, end, resolved: !!resolvedAt && t >= resolvedAt.t };
+}
+function render(){
+  const v = scn.variants[variant];
+  document.getElementById('clock').textContent = `t = ${t.toFixed(1)} s`;
+  document.getElementById('scrub').value = t;
+  const cs = conflictState();
+  // transmissions
+  for (const x of v.transmissions){ const key = variant + ':' + x.t; if (t >= x.t && !shown.has(key)){ shown.add(key); addTx(x); } }
+  // state table
+  const land = v.transmissions.some(x => t >= x.t && x.actions.includes('CLEARED_TO_LAND') && x.parsed.role === 'ATCO');
+  const cross = v.transmissions.some(x => t >= x.t && x.actions.includes('CROSS_RUNWAY') && x.parsed.role === 'ATCO');
+  const vacated = t > scn.alert.lookahead.crosser_window[1] + 2 && !cs.resolved;
+  const rows = [];
+  if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>SIM212</td><td class="${cs.active ? 'bad' : 'ok'}">${cs.active ? 'CONFLICT' : 'active'}</td></tr>`);
+  if (cross) rows.push(`<tr><td>${scn.runway}</td><td>${cs.resolved ? 'hold short' : 'cross at ' + scn.crossing_taxiway}</td><td>RESCUE7</td><td class="${cs.resolved ? 'ok' : (cs.active ? 'bad' : (vacated ? 'ok' : 'warn'))}">${cs.resolved ? 'holding' : (cs.active ? 'CONFLICT' : (vacated ? 'vacated' : 'pending'))}</td></tr>`);
+  document.getElementById('statebody').innerHTML = rows.join('') || '<tr><td colspan=4 style="color:var(--dim)">no active authorizations</td></tr>';
+  const al = document.getElementById('alert'); const ban = document.getElementById('banner');
+  if (t >= scn.alert.t && !cs.resolved && t < cs.end + 0.01){
+    al.className = 'on'; ban.className = 'banner on';
+    al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>warning ${scn.alert.id} at t=${scn.alert.t.toFixed(1)} s · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div><div class="note">${scn.alert.note}</div>`;
+  } else if (cs.resolved && t >= scn.alert.t){ al.className = 'on'; al.style.borderColor = 'var(--green)'; al.style.background = '#0d2a1a'; ban.className = 'banner';
+    al.innerHTML = `<div class="big" style="color:var(--green)">✓ CONFLICT CLEARED — RESCUE7 holding short ${scn.runway}</div><div class="note">${scn.alert.note}</div>`;
+  } else { al.className = ''; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner'; }
+  // map (throttled: the geojson worker must not be flooded with setData calls)
+  const now = performance.now();
+  const needMap = map.getLayer('active') && (t !== lastMapT || cs.active !== lastConflict || (cs.active && now - lastMapAt > 66));
+  if (needMap){
+    lastMapT = t; lastMapAt = now; lastConflict = cs.active;
+    const blink = cs.active ? (0.25 + 0.35 * (0.5 + 0.5 * Math.sin(performance.now() / 150))) : 0;
+    map.setPaintProperty('active', 'line-opacity', blink);
+    map.setPaintProperty('zone', 'circle-stroke-opacity', cs.active ? 0.9 : 0);
+    map.setPaintProperty('zone', 'circle-opacity', cs.active ? 0.15 + 0.15 * Math.sin(performance.now() / 200) : 0);
+    const feats = v.aircraft.map(a => { const q = posAt(a.path, t); const red = cs.active;
+      return { type:'Feature', properties:{ id:a.id, bearing:q.b, icon: (a.kind === 'vehicle' ? 'vehicle-' : 'airliner-') + (red ? 'red' : (a.kind === 'vehicle' ? 'amber' : 'cyan')) }, geometry:{ type:'Point', coordinates:q.p } }; });
+    map.getSource('ac').setData({ type:'FeatureCollection', features: feats });
+  }
+}
+function addTx(x){
+  const el = document.createElement('div'); el.className = 'tx';
+  const pilot = x.parsed.role === 'PILOT';
+  el.innerHTML = `<div class="meta"><span class="spk ${pilot ? 'pilot' : ''}">${x.speaker}</span><span>t=${x.t.toFixed(1)}s</span></div>` +
+    `<div class="text">“${x.text}”</div><pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
+    `<div class="chips">${x.actions.map(a => `<span class="chip ${CRIT.has(a) ? 'crit' : ''}">${a}</span>`).join('')}</div>`;
+  const list = document.getElementById('txlist'); list.appendChild(el); list.parentElement.scrollTop = list.parentElement.scrollHeight;
+}
+function tick(now){
+  if (playing){ if (last != null) t = Math.min(scn.duration, t + (now - last) / 1000 * speed); if (t >= scn.duration) playing = false, setPlay(); }
+  last = now; if (scn) render(); requestAnimationFrame(tick);
+}
+function setPlay(){ document.getElementById('play').textContent = playing ? '❚❚ pause' : '▶ play'; }
+document.getElementById('play').onclick = () => { playing = !playing; setPlay(); };
+document.getElementById('restart').onclick = () => { reset(); };
+document.getElementById('scrub').oninput = e => { t = parseFloat(e.target.value); shown.clear(); document.getElementById('txlist').innerHTML = ''; render(); };
+document.getElementById('speed').onchange = e => speed = parseFloat(e.target.value);
+document.getElementById('variant').onchange = e => { variant = e.target.value; reset(); };
+</script>
+</body>
+</html>

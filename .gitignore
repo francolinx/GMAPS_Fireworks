@@ -1,0 +1,16 @@
+data/raw_xml/
+data/*.jsonl
+data/splits/*.jsonl
+data/sft/
+results/preds_*.jsonl
+results/scores_sanity.json
+__pycache__/
+.env
+*.key
+data/external/
+data/pseudo/
+data/synthetic/*.jsonl
+runs/
+results/dev/*.preds.jsonl
+results/env_check.txt
+viz/ksfo_overpass_raw.json
