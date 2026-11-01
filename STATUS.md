@@ -51,8 +51,8 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 **Not sub-second:** bf16 8B decode on the GB10 is bandwidth-bound (~16 GB weights / 273 GB/s), so per-request latency is ~3 s regardless of concurrency. README's "sub-second" claim needs FP8/NVFP4 serving, a 4B student, or a 0-shot prompt — measure before claiming it.
 
 ## Visualization
-- `viz/index.html` served on :8080 — ok / issue:
-- scenario(s) built:
+- `viz/index.html` served on **:8081** (8080 is taken by `openshell-gateway` on this machine) — **ok**. Headless Chrome check (CDP): page + MapLibre load with no JS errors; 28L conflict inactive at t=27.5, active + banner at t=30 (alert t=28); resolved variant ends with "CONFLICT CLEARED", RESCUE7 at the hold point (0 m). Same check passes for 01R.
+- scenario(s) built: `scenario_sfo_sim1.json` (28L, TWY E; rebuilt from refreshed OSM — 8 runways, 257 taxiways, 86 holding positions) and `scenario_sfo_01r.json` (01R, TWY F; open with `?scenario=scenario_sfo_01r.json`). "parsed" blocks are still the hand-written ones (not model output) — Monday wires the final model in.
 
 ## Problems / open questions for Monday
 - Dev few-shot leakage: `bench/infer.py` takes shots from the **first N dev rows**, and those rows are also scored, so the 5-shot base arm is slightly flattered on dev. On test this does not apply (shots from dev, scored on test).
