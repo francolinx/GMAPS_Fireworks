@@ -1,0 +1,38 @@
+{
+  "model": "atc-qwen3-8b",
+  "base_url": "http://localhost:8001/v1",
+  "rows": 85,
+  "note": "vLLM v0.27.1 on DGX Spark GB10, localhost, bf16 merged LoRA, 5-shot prompt as per script default",
+  "sweep": [
+    {
+      "concurrency": 1,
+      "n": 85,
+      "errors": 0,
+      "p50_ms": 3020.432694996998,
+      "p95_ms": 3899.4901210026,
+      "mean_ms": 3063.7505414942793,
+      "rps": 0.32636954011275493,
+      "wall_s": 260.44097120899823
+    },
+    {
+      "concurrency": 4,
+      "n": 85,
+      "errors": 0,
+      "p50_ms": 2929.6375549965887,
+      "p95_ms": 3735.278592997929,
+      "mean_ms": 2980.3634897883644,
+      "rps": 1.2968089043220816,
+      "wall_s": 65.54550922399358
+    },
+    {
+      "concurrency": 16,
+      "n": 85,
+      "errors": 0,
+      "p50_ms": 3033.8225939995027,
+      "p95_ms": 3916.2893100001384,
+      "mean_ms": 3120.1663886477677,
+      "rps": 4.580498557440644,
+      "wall_s": 18.55693194399646
+    }
+  ]
+}

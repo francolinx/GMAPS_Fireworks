@@ -43,6 +43,12 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 ## Latency (vLLM on Spark, localhost)
 | concurrency | p50 ms | p95 ms | rps |
 |---|---|---|---|
+| 1 | 3020 | 3899 | 0.33 |
+| 4 | 2930 | 3735 | 1.30 |
+| 16 | 3034 | 3916 | 4.58 |
+
+`atc-qwen3-8b` (bf16 merged) on vLLM v0.27.1, localhost, n=85 dev rows per level, 5-shot prompt (script default), 0 errors. `results/latency_spark_local.json`.
+**Not sub-second:** bf16 8B decode on the GB10 is bandwidth-bound (~16 GB weights / 273 GB/s), so per-request latency is ~3 s regardless of concurrency. README's "sub-second" claim needs FP8/NVFP4 serving, a 4B student, or a 0-shot prompt — measure before claiming it.
 
 ## Visualization
 - `viz/index.html` served on :8080 — ok / issue:
