@@ -17,8 +17,10 @@ _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/
 ## Fine-tunes
 | run | base | examples | epochs | train loss | eval loss | wall time | merged? |
 |---|---|---|---|---|---|---|---|
-| qwen3-8b-atc | Qwen/Qwen3-8B | | | | | | |
-| nemotron-nano-8b-atc | nvidia/Llama-3.1-Nemotron-Nano-8B-v1 | | | | | | |
+| qwen3-8b-atc | Qwen/Qwen3-8B | 9478 | **1** | 0.170 | 0.208 (step 50) → **0.123** (step 593) | 124 min | yes (`runs/qwen3-8b-atc/merged`, bf16, 16 GB) |
+| nemotron-nano-8b-atc | nvidia/Llama-3.1-Nemotron-Nano-8B-v1 | — | — | — | — | — | not run (no time left after 8B; Monday) |
+
+Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `atc-train`; unsloth not installed), LoRA r16/α32 on all proj, lr 2e-4 cosine, bsz 8×2, max-seq 1024. Measured 1.27 samples/s → PLAN's 2 epochs would be ~4.2 h, so **1 epoch**. Loss includes prompt tokens (no response-only masking without unsloth). Container stack pinned to transformers 4.57.1 / trl 0.24.0 / peft 0.17.1 (TRL 1.17 + container torch 2.10a: chunked-loss dtype crash; peft 0.21 rejects container torchao 0.14 → torchao removed in the container). `05_finetune_unsloth.py` patched for TRL ≥1 API (processing_class, warmup). Logs: `results/train_log_qwen3-8b-atc.json`, `results/train_log_smoke.json`.
 
 ## Dev results (paste `results/dev/scores.md` tables)
 
