@@ -8,9 +8,9 @@ _(Claude Code: overwrite this file as phases complete. Numbers only from `bench/
 - phases completed: 0 1 2 3 4 5 6 7 8  _(strike through what did not finish)_
 
 ## Data
-- ATCO2 split verified against committed hash: yes / no
-- external: uwb_atcc kept __ / __ (leak_dropped __), atcosim kept __ / __
-- synthetic: us_train __, us_stress __ (sha256 in data/synthetic/us_stress.sha256)
+- ATCO2 split verified against committed hash: **yes** (8660e6de…; train 504 / dev 85 / test 288). Action table OTHER = 5 spans (≈0.6 %).
+- external: uwb_atcc kept 12840 / 14113 (leak_dropped 1, dup 252), atcosim kept 7398 / 9539 (leak_dropped 1, dup 1879)
+- synthetic: us_train 3000, us_stress 300 (regenerated; sha256 matches data/synthetic/us_stress.sha256)
 - pseudo-labels: teacher = ______ ; keep rate uwb __ %, atcosim __ %
 - training mix: __ examples (gold ×2 = __, synthetic __, pseudo __)
 
