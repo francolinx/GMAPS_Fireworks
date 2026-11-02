@@ -61,8 +61,10 @@
 | System | Full-record accuracy | Clearance-state accuracy | vs base Qwen3-8B | Cost of the 288-transmission run |
 |---|---|---|---|---|
 | **Nemotron-3-Nano-30B-A3B + LoRA** (1 epoch, Fireworks) | **70.1%** | 88.4% | +27.8, significant | $0.06 |
+| **Nemotron-3-Nano-30B-A3B + LoRA** (3 epochs, Fireworks) | **69.8%** | 89.9% | +27.4, significant | $0.06 |
 | Claude Opus 5.5, 20-shot | 68.1% | 88.4% | +25.7, significant | $4.17 |
 | Claude Opus 5.5, 5-shot | 67.4% | 89.9% | +25.0, significant | $2.86 |
+| Nemotron-3.5-Lightning-30B-A3B + LoRA (3 epochs, Fireworks) | 62.2% | 91.3% | +19.8, significant | $0.06 |
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks) | 60.4% | 94.2% | +18.1, significant | $0.06 |
 | Qwen3-8B + LoRA v2 (3 epochs, Fireworks) | 59.7% | 89.9% | +17.4, significant | $0.02 |
 | Router: LoRA v1 → Opus on weak outputs | 56.9% | 88.4% | +14.6, significant | — |
@@ -77,7 +79,7 @@
 | Nemotron-30B off the shelf, reasoning on (first attempt), 5-shot | 29.5% | 59.4% | -12.8, significant loss | $0.27 |
 <!-- leaderboard:end -->
 
-**Headline.** A fine-tuned open NVIDIA model **matches Claude Opus 5.5 on real tower radio**: Nemotron-3-Nano-30B-A3B + our LoRA (one epoch on Fireworks, $10.15 of training, 0-shot) scores **70.1%** full-record exact on the 288 frozen test transmissions vs Opus 5.5's **67.4%** (5-shot) — paired Δ +2.8, recording-bootstrap 95% CI [−2.0, +7.4], McNemar p = 0.30: a statistical tie, at roughly **1/45th of the per-transmission cost** ($0.22 vs $9.92 per 1,000) and with weights that can run inside the tower. Against its own off-the-shelf base (39.2%, 5-shot) the gain is **+30.9 points [+23.8, +37.9], p = 7 × 10⁻¹⁷**. The same one-epoch recipe on **Nemotron-3.5-Lightning-30B-A3B** (the model the NVIDIA session used) gives 40.6% → 60.4% (+19.8 [+14.3, +25.3]) and the best clearance-state accuracy of any arm, **94.2%** on the 69 runway-critical rows (Opus 89.9%, Δ +4.3 [+0.0, +9.5]) — but it stays 6.9 points behind Opus on the full record. Two models, one recipe, one test set: the fine-tune is the effect, not the model.
+**Headline.** A fine-tuned open NVIDIA model **matches Claude Opus 5.5 on real tower radio**: Nemotron-3-Nano-30B-A3B + our LoRA (one epoch on Fireworks, $10.15 of training, 0-shot) scores **70.1%** full-record exact on the 288 frozen test transmissions vs Opus 5.5's **67.4%** (5-shot) — paired Δ +2.8, recording-bootstrap 95% CI [−2.0, +7.4], McNemar p = 0.30: a statistical tie, at roughly **1/45th of the per-transmission cost** ($0.22 vs $9.92 per 1,000) and with weights that can run inside the tower. Against its own off-the-shelf base (39.2%, 5-shot) the gain is **+30.9 points [+23.8, +37.9], p = 7 × 10⁻¹⁷**. The same one-epoch recipe on **Nemotron-3.5-Lightning-30B-A3B** (the model the NVIDIA session used) gives 40.6% → 60.4% (+19.8 [+14.3, +25.3]) and the best clearance-state accuracy of any arm, **94.2%** on the 69 runway-critical rows (Opus 89.9%, Δ +4.3 [+0.0, +9.5]) — but it stays 6.9 points behind Opus on the full record. Two models, one recipe, one test set: the fine-tune is the effect, not the model. **The pre-registered revision (three epochs instead of one, addendum 4) changed nothing on the headline:** Nemotron-3-Nano 69.8% (vs 70.1), still a tie with Opus (+2.4 [−3.0, +7.7], p = 0.41) — two independently trained adapters landing within 0.3 points of each other is the replication we did not otherwise have time for; Lightning 62.2% (vs 60.4), now also within noise of Opus (−5.2 [−12.2, +1.4]). All four adapters stay in the table.
 
 **The pre-registered primary comparison (before → after on Qwen3-8B).** Off the shelf, 5-shot: **42.4%**. The same model with our LoRA — v2, three epochs on Fireworks, 0-shot: **59.7%**, **+17.4 points [+10.5, +24.5], McNemar p = 7 × 10⁻⁷**, hosted p50 **0.70 s**. The Nov 1 dry-run adapter (one epoch on the DGX Spark) scored 55.2% (+12.8 [+5.9, +19.7]); v2 over v1 is +4.5 [−1.7, +10.8], not significant on 288 rows. Role accuracy is where the fine-tune gains (57.6% → 79.3%); clearance-state accuracy on the 69 runway-critical rows is unchanged within noise for every open arm (88–91%), and the 8B v2 ties Opus on it exactly (89.9% vs 89.9%). The 8B is still **7.6 points behind Opus** on full record ([−13.9, −1.5], significant); the 30B closes that gap.
 
@@ -90,8 +92,10 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | **Qwen3-8B + LoRA v2 (3 epochs, Fireworks SFT `rtkwkax2`), 0-shot** | Fireworks, on-demand H100 | 89.9% | **59.7%** | 87.5% | 89.4% | 79.3% | **0.70 s** / 7.6 s² | $0.09 |
 | Nemotron-3-Nano-30B-A3B off the shelf, 5-shot | Fireworks batch | 81.2% | 39.2% | 86.6% | 88.1% | 50.0% | — ³ | $0.45 |
 | **Nemotron-3-Nano-30B-A3B + LoRA (1 epoch, Fireworks SFT `g0tr55s3`), 0-shot** | Fireworks batch | 88.4% | **70.1%** | 92.8% | 94.0% | 83.0% | — ³ | $0.22 |
+| Nemotron-3-Nano-30B-A3B + LoRA (3 epochs, Fireworks SFT `yu3izojq`; the pre-registered revision), 0-shot | Fireworks batch | 89.9% | 69.8% | 92.0% | 93.8% | 84.8% | — ³ | $0.22 |
 | Nemotron-3.5-Lightning-30B-A3B off the shelf, 5-shot | Fireworks batch | **92.8%** | 40.6% | 92.5% | 88.1% | 51.4% | — ³ | $0.45 |
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks SFT `zdi4wg97`), 0-shot | Fireworks batch | **94.2%** | 60.4% | 91.8% | 90.2% | 75.7% | — ³ | $0.22 |
+| Nemotron-3.5-Lightning-30B-A3B + LoRA (3 epochs, Fireworks SFT `d6d7yktb`), 0-shot | Fireworks batch | 91.3% | 62.2% | 91.7% | 90.7% | 75.4% | — ³ | $0.22 |
 | Claude Opus 5.5, 5-shot | API via OpenRouter | 89.9% | 67.4% | 91.2% | 93.4% | 81.5% | 5.3 s / 7.2 s | $9.92 |
 | GPT-6.1 Terra Pro, 5-shot | API via OpenRouter | 89.9% | 56.2% | 90.8% | 92.2% | 72.1% | 4.1 s / 8.0 s | $5.01 |
 | Claude Opus 5.5, 20-shot (fairness check) | API via OpenRouter | 88.4% | 68.1% | 91.1% | 94.3% | 81.9% | 3.8 s / 6.1 s | $14.48 |
@@ -113,8 +117,10 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | **Qwen3-8B + LoRA v2** | **+17.4 [+10.5, +24.5]** | −1.4 [−6.5, +3.3] | −0.1 [−3.5, +3.3] | +1.7 [−1.3, +4.7] | +21.7 [+15.5, +27.8] |
 | Nemotron-30B off the shelf | −3.1 [−9.2, +3.1] | −10.1 [−19.0, −2.9] | −0.9 [−5.6, +3.4] | +0.4 [−3.1, +4.2] | −7.6 [−13.7, −1.4] |
 | **Nemotron-30B + LoRA** | **+27.8 [+19.4, +35.8]** | −2.9 [−11.3, +4.6] | +5.3 [+1.5, +9.2] | +6.3 [+2.9, +10.0] | +25.4 [+17.7, +32.6] |
+| Nemotron-30B + LoRA, 3 epochs | +27.4 [+19.4, +35.3] | −1.4 [−9.4, +5.7] | +4.5 [+0.7, +8.4] | +6.1 [+2.7, +9.8] | +27.2 [+20.2, +34.0] |
 | Lightning-3.5-30B off the shelf | −1.7 [−8.0, +4.6] | +1.4 [−6.4, +8.6] | +4.9 [+1.8, +8.3] | +0.4 [−2.7, +3.6] | −6.2 [−12.1, −0.3] |
 | Lightning-3.5-30B + LoRA | +18.1 [+11.2, +25.0] | +2.9 [−2.4, +9.1] | +4.2 [+0.4, +8.2] | +2.5 [−1.3, +6.4] | +18.1 [+12.0, +24.2] |
+| Lightning-3.5-30B + LoRA, 3 epochs | +19.8 [+13.0, +26.7] | +0.0 [−5.7, +5.7] | +4.1 [+0.8, +7.5] | +3.0 [−0.3, +6.5] | +17.8 [+11.8, +23.9] |
 | Claude Opus 5.5, 5-shot | +25.0 [+16.8, +33.1] | −1.4 [−8.3, +4.3] | +3.7 [+0.2, +7.4] | +5.7 [+2.7, +8.9] | +23.9 [+16.7, +31.2] |
 | GPT-6.1 Terra Pro, 5-shot | +13.9 [+5.9, +22.0] | −1.4 [−9.3, +5.9] | +3.3 [−0.5, +7.2] | +4.5 [+1.7, +7.6] | +14.5 [+8.0, +21.2] |
 | Claude Opus 5.5, 20-shot | +25.7 [+17.5, +33.6] | −2.9 [−10.6, +3.2] | +3.6 [−0.0, +7.3] | +6.6 [+3.6, +10.0] | +24.3 [+17.1, +31.4] |
@@ -131,8 +137,12 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | Qwen3-8B + LoRA v2 vs v1 | +4.5 | 44 / 31 | 0.17 | [−1.7, +10.8] | not significant |
 | Nemotron-30B + LoRA vs Nemotron-30B off the shelf | +30.9 | 106 / 17 | 6.6e-17 | [+23.8, +37.9] | significant |
 | **Nemotron-30B + LoRA vs Claude Opus 5.5** | **+2.8** | 27 / 19 | 0.30 | [−2.0, +7.4] | **tie** |
+| Nemotron-30B + LoRA, 3 epochs vs Claude Opus 5.5 | +2.4 | 30 / 23 | 0.41 | [−3.0, +7.7] | tie (replicates) |
+| Nemotron-30B + LoRA, 3 epochs vs Nemotron-30B off the shelf | +30.6 | 113 / 34 | 4.2e-11 | [+23.5, +37.6] | significant |
 | Lightning-3.5-30B + LoRA vs Lightning-3.5-30B off the shelf | +19.8 | 75 / 18 | 1.9e-09 | [+14.3, +25.3] | significant |
 | Lightning-3.5-30B + LoRA vs Claude Opus 5.5 | −6.9 | 36 / 56 | 0.047 | [−13.7, −0.3] | significant (Opus ahead) |
+| Lightning-3.5-30B + LoRA, 3 epochs vs Claude Opus 5.5 | −5.2 | 37 / 52 | 0.14 | [−12.2, +1.4] | not significant |
+| Lightning-3.5-30B + LoRA, 3 epochs vs its 1-epoch adapter | +1.8 | — | — | — | not significant |
 | Qwen3-8B + LoRA v2 vs Claude Opus 5.5 | −7.6 | 22 / 44 | 0.0092 | [−13.9, −1.5] | significant (Opus ahead) |
 | Claude Opus 5.5 vs Qwen3-8B off the shelf | +25.0 | 102 / 30 | 2.3e-10 | [+16.8, +33.1] | significant |
 | Claude Opus 5.5, 20-shot vs 5-shot | +0.7 | 10 / 8 | 0.81 | [−2.2, +3.9] | not significant |
@@ -203,7 +213,7 @@ scripts/11_score_test.sh results/test/<baseline>.preds.jsonl results/test/*.pred
 
 ## 7. Sponsor tracks
 
-- **Fireworks.** Three supervised fine-tuning jobs (two model families) on the same 7,857-example mix (`accounts/francolinjo-co18wqhx/datasets/atc-mix-v2`, 3.64M tokens; dev split as the evaluation set), launched during the build period from `scripts/15_fireworks_sft.py` (upload → SFT → deploy): **`rtkwkax2`** Qwen3-8B, r16, 3 epochs ($5.94; scored through a temporary on-demand H100 deployment with LoRA addons, `scripts/21_fw_v2_pipeline.sh`, torn down after the run); **`g0tr55s3`** Nemotron-3-Nano-30B-A3B, r16, 1 epoch ($10.15; scored with Fireworks batch inference, `scripts/25_fw_batch_eval.py`, because this account has no on-demand configuration for that base); **`zdi4wg97`** Nemotron-3.5-Lightning-30B-A3B, r16, 1 epoch ($10.15; launched 12:59 PT, scored 13:30 PT via batch inference). All test-split runs on Fireworks use the same prompt, shots and scorer as every other arm. Fireworks serverless list prices are the hosted-cost column; total spend on the account for everything above ≈ $35 of the $50 credit.
+- **Fireworks.** Five supervised fine-tuning jobs (two model families, one and three epochs) on the same 7,857-example mix (`accounts/francolinjo-co18wqhx/datasets/atc-mix-v2`, 3.64M tokens; dev split as the evaluation set), launched during the build period from `scripts/15_fireworks_sft.py` (upload → SFT → deploy): **`rtkwkax2`** Qwen3-8B, r16, 3 epochs ($5.94; scored through a temporary on-demand H100 deployment with LoRA addons, `scripts/21_fw_v2_pipeline.sh`, torn down after the run); **`g0tr55s3`** Nemotron-3-Nano-30B-A3B, r16, 1 epoch ($10.15; scored with Fireworks batch inference, `scripts/25_fw_batch_eval.py`, because this account has no on-demand configuration for that base); **`zdi4wg97`** Nemotron-3.5-Lightning-30B-A3B, r16, 1 epoch ($10.15; launched 12:59 PT, scored 13:30 PT via batch inference); **`yu3izojq`** and **`d6d7yktb`** — the same two bases for 3 epochs (≈ $30 each; launched 13:52 PT after the organizers extended the credit, scored 14:30–14:45 PT) as the single pre-registered revision. All test-split runs on Fireworks use the same prompt, shots and scorer as every other arm. Fireworks serverless list prices are the hosted-cost column; total spend on the account for everything above ≈ $100 (the organizers extended the initial $50 credit on request).
 - **NVIDIA.** The headline model is **Nemotron-3-Nano-30B-A3B**, fine-tuned the way the NVIDIA enablement session showed (base → few-shot → LoRA on one held-out set, gains and regressions inspected, cost in tokens and dollars) — and the same model served locally on the DGX Spark (NVFP4) was the teacher that pseudo-labelled the training mix. Both Qwen3-8B arms (off-the-shelf and the dry-run adapter) were trained and served on a DGX Spark (GB10) with vLLM — the on-prem "parser in the tower" configuration; the demo's live panel runs on the Spark, and Nemotron-3.5-Lightning-30B-A3B (NVFP4) was served there with vLLM at 1.5 s per transmission (dev split 58.8% full record, 100% clearance-state, 5-shot, untuned) — the on-prem path for the 30B.
 - **Microsoft.** Not entered.
 

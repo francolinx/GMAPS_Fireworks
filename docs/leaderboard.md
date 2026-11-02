@@ -1,8 +1,10 @@
 | System | Full-record accuracy | Clearance-state accuracy | vs base Qwen3-8B | Cost of the 288-transmission run |
 |---|---|---|---|---|
 | **Nemotron-3-Nano-30B-A3B + LoRA** (1 epoch, Fireworks) | **70.1%** | 88.4% | +27.8, significant | $0.06 |
+| **Nemotron-3-Nano-30B-A3B + LoRA** (3 epochs, Fireworks) | **69.8%** | 89.9% | +27.4, significant | $0.06 |
 | Claude Opus 5.5, 20-shot | 68.1% | 88.4% | +25.7, significant | $4.17 |
 | Claude Opus 5.5, 5-shot | 67.4% | 89.9% | +25.0, significant | $2.86 |
+| Nemotron-3.5-Lightning-30B-A3B + LoRA (3 epochs, Fireworks) | 62.2% | 91.3% | +19.8, significant | $0.06 |
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks) | 60.4% | 94.2% | +18.1, significant | $0.06 |
 | Qwen3-8B + LoRA v2 (3 epochs, Fireworks) | 59.7% | 89.9% | +17.4, significant | $0.02 |
 | Router: LoRA v1 → Opus on weak outputs | 56.9% | 88.4% | +14.6, significant | — |
