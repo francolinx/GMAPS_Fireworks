@@ -29,6 +29,9 @@ LABELS = {  # model name → display name; the shot count is appended from the p
     "qwen3-8b-base": "Qwen3-8B off the shelf (DGX Spark)",
     "accounts/francolinjo-co18wqhx/models/atc-qwen3-8b-v2#accounts/francolinjo-co18wqhx/deployments/atc-eval": "Qwen3-8B + LoRA v2 (Fireworks SFT, hosted)",
     "router:lora->opus": "Router: LoRA → Opus on weak outputs",
+    "accounts/francolinjo-co18wqhx/models/atc-qwen3-8b-v2#accounts/francolinjo-co18wqhx/deployments/atc-eval2": "Qwen3-8B + LoRA v2 (Fireworks SFT, hosted)",
+    "accounts/fireworks/models/nemotron-nano-3-30b-a3b": "Nemotron-3-Nano-30B-A3B off the shelf (Fireworks)",
+    "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v1": "Nemotron-3-Nano-30B-A3B + LoRA (Fireworks SFT)",
 }
 import re
 
