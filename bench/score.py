@@ -216,15 +216,48 @@ def aggregate(rows):
     }
 
 
-def bootstrap(results, iters=2000, seed=0):
-    """Row-resampled 95% CIs per arm, and PAIRED CIs for (arm − first arm) on the same resampled rows."""
+def mcnemar_exact(b, c):
+    """Exact two-sided McNemar p-value: b = only A right, c = only B right; under H0 b ~ Binomial(b+c, 1/2)."""
+    from math import comb
+    n = b + c
+    if n == 0:
+        return 1.0
+    k = min(b, c)
+    p = sum(comb(n, i) for i in range(k + 1)) / 2 ** n
+    return min(1.0, 2 * p)
+
+
+def bootstrap(results, iters=2000, seed=0, clusters=None):
+    """Resampled 95% CIs per arm and PAIRED CIs for (arm − first arm) on the same resampled rows.
+
+    clusters: optional list (len = rows) of cluster ids (e.g. the recording a segment came from). When given, whole
+    clusters are resampled with replacement (segments from one recording share a speaker, channel and airport, so they
+    are not independent); otherwise single rows are. Also computes exact McNemar on full-record exact vs the first arm.
+    """
     import random
     rng = random.Random(seed)
     n = len(results[0]["_rows"])
     samples = {i: {m: [] for m in BOOT_METRICS} for i in range(len(results))}
     diffs = {i: {m: [] for m in BOOT_METRICS} for i in range(1, len(results))}
+    groups = None
+    if clusters:
+        groups = {}
+        for j, c in enumerate(clusters):
+            groups.setdefault(c, []).append(j)
+        keys = list(groups)
+    base_full = [r["full"] for r in results[0]["_rows"]]
+    for i, res in enumerate(results):
+        if i == 0:
+            continue
+        arm_full = [r["full"] for r in res["_rows"]]
+        b = sum(1 for x, y in zip(arm_full, base_full) if x and not y)   # only this arm right
+        c = sum(1 for x, y in zip(arm_full, base_full) if y and not x)   # only the baseline right
+        res["mcnemar_vs_first"] = {"only_arm_right": b, "only_first_right": c, "p": mcnemar_exact(b, c)}
     for _ in range(iters):
-        idx = [rng.randrange(n) for _ in range(n)]
+        if groups:
+            idx = [j for k in (rng.choice(keys) for _ in range(len(keys))) for j in groups[k]]
+        else:
+            idx = [rng.randrange(n) for _ in range(n)]
         aggs = [aggregate([res["_rows"][j] for j in idx]) for res in results]
         for i, a in enumerate(aggs):
             for m in BOOT_METRICS:
@@ -264,6 +297,8 @@ def main():
     ap.add_argument("--prices", help="json: {model: {in: $/M, out: $/M}}")
     ap.add_argument("--out", help="write metrics json here")
     ap.add_argument("--bootstrap", type=int, default=2000, help="bootstrap iterations for 95%% CIs (0 to skip)")
+    ap.add_argument("--cluster", choices=["none", "recording"], default="recording",
+                    help="resample whole recordings (id prefix before '#') instead of single rows; default recording")
     args = ap.parse_args()
 
     gold = [json.loads(l) for l in open(args.gold, encoding="utf-8") if l.strip()]
@@ -289,10 +324,14 @@ def main():
             print(f"WARNING: {r['file']} is missing {r['missing']} of {r['n']} ids — scored as empty")
 
     if args.bootstrap and results and results[0]["_rows"]:
-        bootstrap(results, iters=args.bootstrap)
+        clusters = [g["id"].split("#")[0] for g in gold] if args.cluster == "recording" else None
+        bootstrap(results, iters=args.bootstrap, clusters=clusters)
+        if clusters:
+            print(f"\n(bootstrap resamples whole recordings: {len(set(clusters))} recordings in {len(gold)} segments)")
         labels = {"callsign_f1": "Callsign F1", "action_f1": "Action F1", "action_exact": "Action exact",
                   "runway_critical_exact": "Runway-critical exact", "role_acc": "Role acc", "full_record_exact": "Full record exact"}
-        print(f"\n95% CIs (row bootstrap, {args.bootstrap} iters); Δ is paired vs. {results[0]['model']}:\n")
+        kind = "recording-cluster bootstrap" if clusters else "row bootstrap"
+        print(f"\n95% CIs ({kind}, {args.bootstrap} iters); Δ is paired vs. {results[0]['model']}:\n")
         print("| Metric | " + " | ".join(str(r["model"]) for r in results) + " |")
         print("|---|" + "---|" * len(results))
         for m in BOOT_METRICS:
@@ -306,6 +345,17 @@ def main():
                 cells.append(cell)
             print(f"| {labels[m]} | " + " | ".join(cells) + " |")
         print("\nA Δ interval that excludes 0 is a difference the test set supports; one that straddles 0 is a tie.")
+        print("\nExact McNemar on full-record exact vs the first arm (rows where exactly one is right):\n")
+        print("| Arm | only arm right | only first right | McNemar p | verdict |")
+        print("|---|---|---|---|---|")
+        for r in results[1:]:
+            mc = r.get("mcnemar_vs_first")
+            if not mc:
+                continue
+            ci = (r.get("delta_vs_first") or {}).get("full_record_exact", {}).get("ci95")
+            both = mc["p"] < 0.05 and ci and (ci[0] > 0 or ci[1] < 0)
+            verdict = "significant (both tests)" if both else "not significant"
+            print(f"| {r['model']} | {mc['only_arm_right']} | {mc['only_first_right']} | {mc['p']:.2g} | {verdict} |")
 
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)

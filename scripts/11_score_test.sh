@@ -7,4 +7,4 @@ set -euo pipefail
 mkdir -p results/test
 # de-duplicate while preserving order
 FILES=(); for f in "$@"; do skip=0; for g in "${FILES[@]:-}"; do [ "$f" = "$g" ] && skip=1; done; [ $skip = 0 ] && FILES+=("$f"); done
-python3 bench/score.py data/splits/test.jsonl "${FILES[@]}" --prices results/prices.json --bootstrap 2000 --out results/test/scores.json | tee results/test/scores.md
+python3 bench/score.py data/splits/test.jsonl "${FILES[@]}" --prices results/prices.json --bootstrap 5000 --out results/test/scores.json | tee results/test/scores.md

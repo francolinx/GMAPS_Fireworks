@@ -4,7 +4,7 @@
 
 ![GMAPS runway monitor — KSFO 28L, SIM212 cleared to land, RESCUE7 cleared to cross at E](docs/runway_monitor_sfo_28l.png)
 
-**One sentence.** On 288 real tower transmissions from three airports it never saw, a LoRA on Qwen3-8B lifts full-record accuracy from **42.4% to 55.2% (+12.8, 95% CI [+5.2, +20.1])** and reaches 82% of Claude Opus 5.5's score at ~1/100th the per-transmission cost — on a model that can run inside the tower on a DGX Spark with no internet.
+**One sentence.** On 288 real tower transmissions from three airports it never saw, a LoRA on Qwen3-8B lifts full-record accuracy from **42.4% to 55.2% (+12.8, 95% CI [+5.9, +19.8], p = 0.001)** and reaches 82% of Claude Opus 5.5's score at ~1/100th the per-transmission cost — on a model that can run inside the tower on a DGX Spark with no internet.
 
 ## 1. Project overview
 
@@ -55,7 +55,7 @@
 
 ![Before → after on the frozen test split](docs/results_full_record.png)
 
-**Before → after (the graded comparison).** Qwen3-8B off the shelf, 5-shot: **42.4%** full-record exact. The same model with our LoRA, 0-shot: **55.2%** — **+12.8 points, paired 95% CI [+5.2, +20.1]**, on 288 real transmissions from three airports it never saw. Role accuracy +17.4 points [+9.4, +25.0]. Clearance-state accuracy is unchanged within noise (88.4% vs 91.3%, Δ −2.9 [−7.5, 0.0]): the fine-tune's gain is in knowing *who* is speaking and *which aircraft*, not in reading the clearance words, which the base already does. This row is the **Nov 1 dry-run adapter** (1 epoch, loss on prompt tokens, 30B-teacher labels, `STATUS.md`); the v2 training run described in §7 is the submitted model if it finished in time — see the row marked v2 below, or its absence.
+**Before → after (the graded comparison).** Qwen3-8B off the shelf, 5-shot: **42.4%** full-record exact. The same model with our LoRA, 0-shot: **55.2%** — **+12.8 points, recording-cluster bootstrap 95% CI [+5.9, +19.8], McNemar p = 0.001**, on 288 real transmissions from three airports it never saw. Role accuracy +17.4 points [+10.5, +24.3]. Clearance-state accuracy is unchanged within noise (88.4% vs 91.3%, Δ −2.9 [−7.3, 0.0]): the fine-tune's gain is in knowing *who* is speaking and *which aircraft*, not in reading the clearance words, which the base already does. This row is the **Nov 1 dry-run adapter** (1 epoch, loss on prompt tokens, 30B-teacher labels, `STATUS.md`); the v2 training run described in §7 is the submitted model if it finished in time — see the row marked v2 below, or its absence.
 
 **Reference — the strongest closed model.** Claude Opus 5.5, 5-shot: 67.4% [61.5, 72.6]. We are **12.2 points behind it** on full record (paired Δ −12.2 [−18.1, −5.9]) and tied on clearance-state accuracy (88.4% vs 89.9%, Δ −1.4 [−7.7, +4.9]), at roughly **1/100th the per-transmission cost** on hosted inference and zero marginal cost on the Spark in the tower.
 
@@ -77,11 +77,23 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 
 | Arm | Full record | Clearance-state | Action F1 | Callsign F1 | Role |
 |---|---|---|---|---|---|
-| Qwen3-8B + LoRA (ours) | +12.8 [+5.2, +20.1] | -2.9 [-7.5, +0.0] | -1.7 [-4.7, +1.2] | +1.3 [-1.4, +4.3] | +17.4 [+9.4, +25.0] |
-| Claude Opus 5.5, 5-shot | +25.0 [+17.7, +32.3] | -1.4 [-6.8, +3.2] | +3.7 [+0.3, +7.2] | +5.7 [+2.5, +8.9] | +23.9 [+16.7, +30.9] |
-| Claude Opus 5.5, 20-shot | +25.7 [+18.4, +33.0] | -2.9 [-9.1, +2.8] | +3.6 [+0.4, +7.1] | +6.6 [+3.4, +10.1] | +24.3 [+16.9, +31.4] |
-| GPT-5.5, 5-shot | +10.8 [+4.5, +17.4] | -2.9 [-8.9, +2.9] | +3.3 [-0.2, +7.0] | +5.5 [+2.5, +8.6] | +8.3 [+2.5, +14.4] |
-| GPT-5.6 Terra, 5-shot | +6.6 [+0.7, +12.5] | -2.9 [-7.4, +0.0] | +0.4 [-3.5, +4.4] | +4.9 [+2.0, +7.8] | +4.0 [-2.2, +10.3] |
+| Qwen3-8B + LoRA (ours) | +12.8 [+5.9, +19.7] | -2.9 [-7.5, +0.0] | -1.7 [-4.8, +1.7] | +1.3 [-1.7, +4.4] | +17.4 [+10.4, +24.4] |
+| Claude Opus 5.5, 5-shot | +25.0 [+16.8, +33.1] | -1.4 [-8.3, +4.3] | +3.7 [+0.2, +7.4] | +5.7 [+2.7, +8.9] | +23.9 [+16.7, +31.2] |
+| Claude Opus 5.5, 20-shot | +25.7 [+17.5, +33.6] | -2.9 [-10.6, +3.2] | +3.6 [-0.0, +7.3] | +6.6 [+3.6, +10.0] | +24.3 [+17.1, +31.4] |
+| GPT-5.5, 5-shot | +10.8 [+4.0, +17.3] | -2.9 [-10.1, +3.2] | +3.3 [-0.6, +7.3] | +5.5 [+2.7, +8.6] | +8.3 [+2.9, +13.8] |
+| GPT-5.6 Terra, 5-shot | +6.6 [+0.3, +13.0] | -2.9 [-7.1, +0.0] | +0.4 [-3.9, +4.5] | +4.9 [+2.2, +7.8] | +4.0 [-1.5, +9.5] |
+| Router: LoRA → Opus | +14.6 [+7.2, +21.9] | -2.9 [-7.5, +0.0] | -0.4 [-3.3, +2.8] | +2.1 [-1.1, +5.3] | +17.8 [+10.7, +24.9] |
+
+**How we decide a difference is real** (the two checks from the Fireworks sample project; a difference counts only if it passes both). *McNemar*: look only at the rows where exactly one of the two systems is fully right; under "equally good" that split is a coin flip, and the exact binomial p-value says how lopsided it is. *Cluster bootstrap*: resample whole **recordings** (159 in the test set — segments from one recording share a speaker, channel and airport, so they are not independent) with replacement 5,000 times and rescore both systems; the 95% interval of the gap must exclude zero.
+
+| Comparison vs Qwen3-8B off the shelf | Gap (full record) | Rows only this / only baseline right | McNemar p | Recording bootstrap 95% CI | Verdict |
+|---|---|---|---|---|---|
+| Qwen3-8B + LoRA (ours) | +12.8 | 79 / 42 | 0.00098 | [+5.9, +19.7] | significant |
+| Claude Opus 5.5, 5-shot | +25.0 | 102 / 30 | 2.3e-10 | [+16.8, +33.1] | significant |
+| Claude Opus 5.5, 20-shot | +25.7 | 104 / 30 | 9.3e-11 | [+17.5, +33.6] | significant |
+| GPT-5.5, 5-shot | +10.8 | 59 / 28 | 0.0012 | [+4.0, +17.3] | significant |
+| GPT-5.6 Terra, 5-shot | +6.6 | 48 / 29 | 0.04 | [+0.3, +13.0] | significant |
+| Router: LoRA → Opus | +14.6 | 85 / 43 | 0.00026 | [+7.2, +21.9] | significant |
 
 **What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm is within noise of every other (88–91%): all of them know what "cleared to land" means; what separates them is who said it and to whom.
 
