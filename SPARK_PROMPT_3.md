@@ -22,7 +22,7 @@ accident in which two people died: no crash animation, no sound effects, no blam
 | 23:31:42 | −198 | ground emergency declared near Terminal B (an airliner after two rejected takeoffs); six ARFF vehicles + one PAPD car respond, gather at taxiways BB/D | NTSB prelim |
 | 23:35:07 | 7 | Tower (LC) clears JZA646 to land runway 4; aircraft on 5-mile final, ~1,900 ft | NTSB prelim |
 | 23:35:47 | 47 | Truck 7 tries to call tower; blocked by a simultaneous transmission | NTSB prelim |
-| 23:36:21 | 81 | Truck 7 tries again; before ATC answers, Truck 1 takes over the call. Aircraft ~2.3 nm, ~650 ft | NTSB prelim |
+| 23:36:21 | 81 | Truck 7 tries again; before ATC answers, Truck 7 coordinates with Truck 1 to make the call. Aircraft ~2.3 nm, ~650 ft | NTSB prelim |
 | 23:36:44 | 104 | LC asks which vehicle needs to cross a runway. Aircraft ~1.5 nm, ~400 ft | NTSB prelim |
 | 23:36:51 | 111 | Runway-entrance lights at 4/D illuminate. Aircraft ~1.2 nm, ~287 ft. Truck 1 stopped ~460 ft from the runway edge | NTSB prelim |
 | 23:36:56 | 116 | Truck 1: "Truck 1 and company" (quoted); requests to cross runway 4 at D | NTSB prelim |
@@ -34,7 +34,7 @@ accident in which two people died: no crash animation, no sound effects, no blam
 | 23:37:20 | 140 | LC tells Truck 1 to stop again; Truck 1 just over 100 ft from the runway at ~29 mph | NTSB prelim |
 | 23:37:21 | 141 | Runway-entrance lights extinguish (by design, 2–3 s before the aircraft reaches the intersection) | NTSB prelim |
 | 23:37:22 | 142 | Nose-gear touchdown ~400 ft from D, 106 kt. Truck 1 enters runway 4 at 30 mph | NTSB prelim |
-| ~23:37:25 | ~145 | Collision at the intersection of runway 4 and taxiway D; last recorded ground speed 90 kt | NTSB prelim |
+| ~23:37:24 | ~144 | Collision at the intersection of runway 4 and taxiway D; last recorded ground speed 90 kt | NTSB prelim |
 
 Facts also from the report: ASDE-X raised no alert (the trucks have no transponders and could not be tracked reliably); the
 runway status lights worked as designed; two controllers were on duty and the LC was transmitting on both tower and ground.
@@ -70,7 +70,7 @@ ones `wording: as reported`.
    - `docs/video/lga_04_gmaps_2x.mp4` — same radio. At **t=124**, the instant "cross runway four at delta" is parsed, the ledger
      holds `4: cleared to land JAZZ 646 (active, on short final)` and `4: cross at D TRUCK 1` → alert
      `POSSIBLE CONFLICT — RWY 4: JAZZ 646 cleared to land vs TRUCK 1 cleared to cross at D`, cites JO 7110.65 3-1-3 / 3-7-2,
-     look-ahead: aircraft at D in ~21 s, truck at D in ~18 s. Caption: `Alert at 23:37:04 — 18 seconds before Truck 1 entered
+     look-ahead: aircraft at D in ~20 s, truck at D in ~18 s. Caption: `Alert at 23:37:04 — 18 seconds before Truck 1 entered
      the runway. Whether that changes the outcome is for the NTSB to say. Decision support only; the controller decides.`
      Freeze there; do not play the collision.
    Both clips open with a 3-second title card: `LaGuardia, March 22, 2026 · reconstruction from the NTSB preliminary report
