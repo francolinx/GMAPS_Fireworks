@@ -26,12 +26,13 @@ Pre-event changes made during the Nov 1 Spark dry run (Claude Code, unattended; 
 - `viz/scenario_sfo_01r.json`: second scenario (01R) generated with `viz/build_scenario.py`; `viz/ksfo.geojson` refreshed from Overpass
 - dry-run artifacts: local-teacher pseudo-labels (Nemotron-3-Nano-30B-A3B NVFP4), SFT mix (9478 rows), Qwen3-8B LoRA (1 epoch), dev/stress scores, latency sweep, training logs in `results/`
 
-Built **during** the event (Nov 2, 10:30–16:30 PT) — *fill in Monday*:
-- frontier baseline run on the test split (model, version, prompt version)
-- Fireworks SFT job(s) (ids), deployment(s), the submitted fine-tuned model
-- test-split evaluation of all arms, error analysis, the one prompt revision
-- confidence router and blended-cost arm
-- README results, tradeoffs, video
+Built **during** the event (Nov 2, from 10:30 PT):
+- 10:53–12:05 — four frontier reference arms on the frozen test split via OpenRouter (Claude Opus 5.5 at 5- and 20-shot, GPT-5.5, GPT-5.6 Terra), `results/test/*.preds.jsonl`
+- ~12:10 — on the Spark: the off-the-shelf Qwen3-8B (5-shot) and the Nov 1 dry-run LoRA (0-shot) on the frozen test split
+- 12:15 — joint scoring with paired bootstrap CIs (`results/test/scores.md`), error analysis, router arm (reported; not helpful)
+- 12:30–13:00 — README §4 results, chart (`docs/results_full_record.png`), the 118-second video (`docs/video/`), the slide deck for the live round
+- no prompt revision was made after seeing test results; the scorer rule fixed at 08:40 PT (ACK/OTHER as non-actions) predates every test run
+- Fireworks SFT (v2 training mix, 3 epochs): *[job id / "not run — no API key reached the cloud session before the deadline"]*
 
 Related prior work: GMAPS (runway clearance-state engine, Dell × NVIDIA Boston hackathon, Oct 2026). This submission
 reuses *[state exactly which components, if any]*; the scenario viewer in `viz/` was written for this event's pre-work.

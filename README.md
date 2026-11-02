@@ -123,17 +123,17 @@ scripts/11_score_test.sh results/test/<baseline>.preds.jsonl results/test/*.pred
 
 ## 7. Sponsor tracks
 
-- **Fireworks.** Supervised fine-tuning (LoRA, SFT v2) of Qwen3-8B on the 9,478-example mix; serverless LoRA deployment; all hosted arms evaluated through the Fireworks OpenAI-compatible API. *[job id, deployment id]*
-- **NVIDIA.** Nemotron student (Llama-3.1-Nemotron-Nano-8B) fine-tuned on a DGX Spark; the on-prem deployment arm runs the adapter on the Spark with vLLM — the "parser in the tower" configuration. Pseudo-label teacher: Nemotron-3-Nano-30B.
-- **Microsoft.** *[Phi-4-mini as a third student if time allowed; otherwise not entered — state which.]*
+- **Fireworks.** The hosted-cost column uses Fireworks serverless list prices for the 4–16B tier; the v2 training mix (`data/sft/mix_train_v2.sha256`, 7,857 examples) and the end-to-end SDK route (`scripts/15_fireworks_sft.py`: upload → SFT → deploy) are in the repo. *[Fireworks SFT job id and deployed model, or: the job was not run — the team's Fireworks credentials did not reach the cloud session before the deadline; the submitted adapter was trained on the DGX Spark.]*
+- **NVIDIA.** Both open arms (off-the-shelf and fine-tuned) were trained and served on a DGX Spark (GB10) with vLLM — the on-prem "parser in the tower" configuration; pseudo-labels for the dry-run mix came from Nemotron-3-Nano-30B served locally on the same machine.
+- **Microsoft.** Not entered.
 
 ## 8. Team
 
-*[names, GitHub handles, who did what]*
+Franco Plathottathil (`francolinx`) — project lead: GMAPS, data, Spark training and on-prem arms, submission. *[teammate name, handle — role]*. Cloud-side benchmark runs, scoring, README and deck were produced with Claude (Anthropic) under the team's direction.
 
 ## 9. Pre-existing work and AI assistance (disclosure)
 
-*Paste `DISCLOSURE.md` here before submitting.* In short: the benchmark harness, data pipelines, synthetic generator, Spark scripts and the viewer were built Oct 31 – Nov 1 and are in this repo's history with timestamps; a dry-run fine-tune and dev-split numbers were produced Nov 1 (`STATUS.md`). The frozen test split was first evaluated during the build period; every result in §4, the Fireworks training and deployment, the router and the video were produced during the event. GMAPS's ledger / look-ahead engine is prior work from the Dell × NVIDIA Boston hackathon (Oct 2026) and is not evaluated here. Claude (Anthropic) was used to scaffold this repository and during the build; the team is responsible for the implementation and the reported results.
+Full table in [`DISCLOSURE.md`](DISCLOSURE.md). In short: the benchmark harness, data pipelines, synthetic generator, Spark scripts and the viewer were built Oct 31 – Nov 1 and are in this repo's history with timestamps; a dry-run fine-tune and dev-split numbers were produced Nov 1 (`STATUS.md`). The frozen test split was first evaluated during the build period; every result in §4, the Fireworks training and deployment, the router and the video were produced during the event. GMAPS's ledger / look-ahead engine is prior work from the Dell × NVIDIA Boston hackathon (Oct 2026) and is not evaluated here. Claude (Anthropic) was used to scaffold this repository and during the build; the team is responsible for the implementation and the reported results.
 
 ## Repository map
 
