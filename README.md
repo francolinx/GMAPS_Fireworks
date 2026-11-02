@@ -143,11 +143,12 @@ The first two rows are the Qwen3-8B dry-run adapter (the Nov 1 model); the Nemot
 
 - **Narrow by design.** The adapter parses ATC phraseology and nothing else; it is not a chat model.
 - **Test airports are European and Australian English.** US phraseology is covered in training only synthetically; a US gold test set does not exist publicly. We say this rather than hide it behind the synthetic score.
+- **The 30B result is one run, one epoch, one seed.** A tie with Opus on 288 rows is a tie; we did not get to repeat it, and the reasoning-off setting was chosen after seeing the reasoning-on test numbers (prereg addendum 3).
 - **Distribution shift is real and reported:** test is pilot-heavy, train is controller-heavy.
-- **Clearance-state subset is small (n=70)** — hence the CIs. Full-record exact on 288 is the headline; clearance-state is the operational framing.
+- **Clearance-state subset is small (n=69)** — hence the CIs. Full-record exact on 288 is the headline; clearance-state is the operational framing.
 - **Command→action table is heuristic** (0.6% of gold spans map to OTHER). It is applied identically to gold and to every arm.
-- **Pseudo-labels came from a 30B open teacher**, validated by substring checks, not by humans. They are training data only.
-- **Latency depends on where you run it.** Hosted on Fireworks: [p50] ms. On the DGX Spark in bf16: ~3 s per transmission (bandwidth-bound; 16 concurrent requests at the same latency ≈ 4.6 req/s, enough for ~30 frequencies). FP8/NVFP4 or the 4B student would bring the on-prem number down; we report what we measured.
+- **Pseudo-labels came from a 30B open teacher** (Nemotron-3-Nano-30B-A3B served locally), validated by substring checks, not by humans. They are training data only — and the same model family is now the headline student, so the LoRA has seen its own teacher's labelling style; the test split was never labelled by any model.
+- **Latency depends on where you run it.** Hosted on Fireworks (8B LoRA on one H100, 8 concurrent requests): p50 0.70 s; the 30B Nemotron arm ran as a batch job and has no per-request latency figure yet. On the DGX Spark in bf16: ~3 s per transmission (bandwidth-bound; 16 concurrent requests at the same latency ≈ 4.6 req/s, enough for ~30 frequencies). FP8/NVFP4 or the 4B student would bring the on-prem number down; we report what we measured.
 - **The ledger and look-ahead are not evaluated here.** They are deterministic, pre-existing GMAPS code; this submission measures the parser that feeds them. The viewer in `viz/` runs scripted scenarios on real KSFO geometry (© OpenStreetMap contributors) with fictional traffic.
 
 ## 6. Reproduce
