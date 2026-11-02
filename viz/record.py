@@ -33,6 +33,7 @@ def main():
     ap.add_argument("--size", default="1440x900")
     ap.add_argument("--at", type=float, help="still: scenario time to capture (page plays at 8x to get there)")
     ap.add_argument("--no-live", action="store_true")
+    ap.add_argument("--settle-s", type=float, default=2.5, help="still: wait this long after stopping (lets the last live-parser result land)")
     ap.add_argument("--max-s", type=float, default=400)
     ap.add_argument("--speedup", type=float, default=2.0, help="clip: record the page at 1x, then speed the video up this much in ffmpeg (setpts) so live results land where they happened")
     ap.add_argument("--card-s", type=float, default=3.0, help="title/closing card length in the FINAL video")
@@ -53,7 +54,7 @@ def main():
             page.wait_for_function(f"() => window.__frozen === true || parseFloat(document.getElementById('clock').textContent.split('=')[1]) >= {a.at + 0.02}", timeout=int(a.max_s * 1000), polling=50)
             if not page.evaluate("() => window.__frozen === true") and "freeze" not in q:
                 page.evaluate("() => document.getElementById('play').click()")
-            page.wait_for_timeout(2500)  # last live call + caption settle
+            page.wait_for_timeout(int(a.settle_s * 1000))  # last live call + caption settle
             page.screenshot(path=a.out)
             print("wrote", a.out)
             browser.close()
