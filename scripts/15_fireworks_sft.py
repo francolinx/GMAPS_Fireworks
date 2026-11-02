@@ -133,6 +133,10 @@ def cmd_deploy_ondemand(args):
         extra = {"accelerator_count": args.count} if args.count > 0 else {}   # 0 → let Fireworks size it
         if args.precision != "default":
             extra["precision"] = args.precision
+        if args.shape:
+            extra["deployment_shape"] = args.shape          # a validated shape, e.g. accounts/fireworks/deploymentShapes/qwen3-8b-minimal
+        else:
+            extra["accept_shapeless_risk"] = True           # explicit accelerator choice, no shape validation
         d = c.deployments.create(account_id=aid, deployment_id=dep_id, base_model=args.base, display_name=dep_id,
                                  enable_addons=True, accelerator_type=args.accelerator,
                                  min_replica_count=1, max_replica_count=1,
@@ -186,7 +190,8 @@ def main():
     p = sub.add_parser("deploy"); p.add_argument("model"); p.add_argument("--deployment"); p.set_defaults(fn=cmd_deploy)
     p = sub.add_parser("deploy-ondemand"); p.add_argument("model"); p.add_argument("--deployment-id", default="atc-eval")
     p.add_argument("--base", default="accounts/fireworks/models/qwen3-8b"); p.add_argument("--accelerator", default="NVIDIA_H100_80GB")
-    p.add_argument("--count", type=int, default=1); p.add_argument("--precision", default="BF16"); p.set_defaults(fn=cmd_deploy_ondemand)
+    p.add_argument("--count", type=int, default=1); p.add_argument("--precision", default="BF16"); p.add_argument("--shape", default="")
+    p.set_defaults(fn=cmd_deploy_ondemand)
     p = sub.add_parser("undeploy"); p.add_argument("--deployment-id", default="atc-eval"); p.set_defaults(fn=cmd_undeploy)
     args = ap.parse_args(); args.fn(args)
 

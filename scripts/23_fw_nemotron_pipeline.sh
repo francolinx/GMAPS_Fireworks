@@ -9,7 +9,7 @@ cleanup() { python3 scripts/15_fireworks_sft.py undeploy --deployment-id "$DEP" 
 python3 scripts/15_fireworks_sft.py status "$JOB" | tail -3
 python3 scripts/15_fireworks_sft.py status "$JOB" --once | grep -q COMPLETED || { echo "job not completed"; exit 1; }
 trap cleanup EXIT
-python3 scripts/15_fireworks_sft.py deploy-ondemand "$OUT" --deployment-id "$DEP" --base "$BASE" --count 0 --precision default
+python3 scripts/15_fireworks_sft.py deploy-ondemand "$OUT" --deployment-id "$DEP" --base "$BASE" --accelerator NVIDIA_H100_80GB --count 2 --precision BF16
 export BASE_URL=https://api.fireworks.ai/inference/v1 API_KEY="$FIREWORKS_API_KEY"
 export EXTRA='{"chat_template_kwargs":{"enable_thinking":false}}'
 B="$BASE#accounts/$ACCT/deployments/$DEP"; L="accounts/$ACCT/models/$OUT#accounts/$ACCT/deployments/$DEP"
