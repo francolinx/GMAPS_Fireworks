@@ -6,7 +6,8 @@
   python3 viz/record.py clip  "mode=gmaps&variant=resolved"           docs/video/sfo_28l_gmaps_2x.mp4
   python3 viz/record.py still "mode=asis&variant=unresolved&freeze=98" docs/runway_monitor_sfo_28l_asis.png --at 98 --size 1920x1200
 
-Clips: 1440×900, page speed 2× (scenario seconds / 2 = video seconds), 25 fps H.264, live panel on (?live=1) unless --no-live.
+Clips: 1440×900, recorded at page speed 1× and sped up --speedup (default 2×) with ffmpeg setpts, so live-parser results land
+in the panel exactly where they arrived; 25 fps H.264, no audio, live panel on (?live=1) unless --no-live.
 The page sets window.__done at the end of the scenario (or 4 s after the as-is freeze); recording stops there.
 Needs: pip install playwright imageio-ffmpeg && playwright install chromium (ffmpeg comes from imageio-ffmpeg if not on PATH).
 """
@@ -32,7 +33,9 @@ def main():
     ap.add_argument("--size", default="1440x900")
     ap.add_argument("--at", type=float, help="still: scenario time to capture (page plays at 8x to get there)")
     ap.add_argument("--no-live", action="store_true")
-    ap.add_argument("--max-s", type=float, default=150)
+    ap.add_argument("--max-s", type=float, default=400)
+    ap.add_argument("--speedup", type=float, default=2.0, help="clip: record the page at 1x, then speed the video up this much in ffmpeg (setpts) so live results land where they happened")
+    ap.add_argument("--card-s", type=float, default=3.0, help="title/closing card length in the FINAL video")
     a = ap.parse_args()
     w, h = map(int, a.size.split("x"))
     q = a.query + ("" if a.no_live else "&live=1")
@@ -58,15 +61,15 @@ def main():
         ctx = browser.new_context(viewport={"width": w, "height": h}, record_video_dir=tmp, record_video_size={"width": w, "height": h})
         page = ctx.new_page()
         t0 = time.time()
-        page.goto(f"{a.base}?{q}&speed=2&autoplay=1", wait_until="domcontentloaded")
+        page.goto(f"{a.base}?{q}&speed=1&autoplay=1&cardms={int(a.card_s * a.speedup * 1000)}", wait_until="domcontentloaded")
         page.wait_for_function("() => window.__done === true", timeout=int(a.max_s * 1000), polling=250)
-        lead = max(0.0, page.evaluate("() => window.__startedAt || 0") / 1000 - 0.3)  # trim the page-load lead-in
+        lead = max(0.0, page.evaluate("() => window.__startedAt || 0") / 1000 - 0.2)  # trim the page-load lead-in (card starts at __startedAt)
         live = page.evaluate("() => window.__live")
         video = page.video.path()
         ctx.close(); browser.close()
         print(f"recorded {time.time() - t0:.1f} s (trim {lead:.1f} s); live calls: {len(live)}; latencies ms: {[round(c['latency_ms']) for c in live]}")
         # Playwright's webm is variable frame rate; re-time to constant 25 fps H.264.
-        subprocess.run([ffmpeg_exe(), "-y", "-loglevel", "error", "-ss", f"{lead}", "-i", video, "-r", "25", "-vf", f"scale={w}:{h}",
+        subprocess.run([ffmpeg_exe(), "-y", "-loglevel", "error", "-ss", f"{lead}", "-i", video, "-vf", f"setpts=PTS/{a.speedup},scale={w}:{h}", "-r", "25", "-an",
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart", a.out], check=True)
         print("wrote", a.out)
 

@@ -41,15 +41,20 @@
   footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
   footer input[type=range]{flex:1} footer button{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono)}
   #clock{min-width:90px;color:var(--cyan)}
-  .banner{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:5}
+  .banner{position:absolute;left:50%;top:52px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:5}
   .banner.on{display:block}
-  #caption{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);max-width:92%;padding:12px 20px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:17px;letter-spacing:.03em;display:none;z-index:6;text-align:center}
+  #caption{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;max-width:86%;padding:10px 18px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:15px;line-height:1.45;letter-spacing:.03em;display:none;z-index:6;text-align:center}
   #caption.red{display:block;background:rgba(120,10,30,.92);border:2px solid var(--red);color:#fff}
   #caption.green{display:block;background:rgba(8,60,32,.92);border:2px solid var(--green);color:#eafff1}
+  #card{position:fixed;inset:0;z-index:50;background:#05080f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:60px;text-align:center;font-family:var(--mono)}
+  #card.on{display:flex} #card .c1{font-size:40px;font-weight:700;color:#eef2ff;letter-spacing:.04em} #card .c2{font-size:21px;color:#b7c3dd;max-width:1100px}
+  .tx .wording{font-family:var(--mono);font-size:10px;color:var(--amber);margin:-2px 0 6px} #clock .wall{font-size:16px;font-weight:700;color:#eef2ff;margin-right:10px}
+  #clock{min-width:260px}
   #livecap{position:absolute;left:12px;top:12px;z-index:6;font-family:var(--mono);font-size:12px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:5px 10px;border-radius:6px;display:none}
 </style>
 </head>
 <body>
+<div id="card"></div>
 <div id="app">
   <header>
     <h1>GMAPS · RUNWAY MONITOR</h1><span class="sub" id="hdr">loading…</span>
@@ -86,11 +91,12 @@
 </div>
 <script>
 const qs = new URLSearchParams(location.search);
-const GEO = qs.get('geo') || 'ksfo.geojson';
-const SCN = qs.get('scenario') || 'scenario_sfo_sim1.json';
+let GEO = qs.get('geo');
+const SCN = qs.get('scenario') || 'scenario_lga_04.json';
 // mode=asis: transmissions are parsed but no rule runs (today's tower); mode=gmaps (default): the conflict engine runs.
 const MODE = qs.get('mode') === 'asis' ? 'asis' : 'gmaps';
-const FREEZE = qs.has('freeze') ? parseFloat(qs.get('freeze')) : null;
+let FREEZE = qs.has('freeze') ? parseFloat(qs.get('freeze')) : null;
+const CARD_MS = parseFloat(qs.get('cardms') || 3000);
 const LIVE = qs.get('live') === '1';
 const CRIT = new Set(['CLEARED_TO_LAND','CLEARED_FOR_TAKEOFF','LINE_UP_AND_WAIT','HOLD_SHORT','HOLD_POSITION','CROSS_RUNWAY','BACKTRACK','TOUCH_AND_GO','VACATE_RUNWAY','GO_AROUND']);
 const FACILITY = { TWR: 'san francisco tower', GND: 'san francisco ground' };
@@ -120,7 +126,10 @@ function bearing(a, b){ const toR = x => x*Math.PI/180; const y = Math.sin(toR(b
   const x = Math.cos(toR(a[1]))*Math.sin(toR(b[1])) - Math.sin(toR(a[1]))*Math.cos(toR(b[1]))*Math.cos(toR(b[0]-a[0]));
   return (Math.atan2(y,x)*180/Math.PI + 360) % 360; }
 const actorName = id => (scn && scn.actors && scn.actors[id]) || id;
-const shortName = id => ({ MPL212: 'MPL212', RESCUE7: 'RESCUE 7' })[id] || id;
+const shortName = id => (scn && scn.actor_short && scn.actor_short[id]) || ({ MPL212: 'MPL212', RESCUE7: 'RESCUE 7' })[id] || id;
+const landerId = () => scn.variants[variant].aircraft.find(a => a.kind !== 'vehicle').id;
+const crosserId = () => scn.variants[variant].aircraft.find(a => a.kind === 'vehicle').id;
+function wall(tt){ if (!scn || !scn.clock0) return ''; let s = scn.clock0[0]*3600 + scn.clock0[1]*60 + scn.clock0[2] + Math.floor(tt); const p = n => String(n).padStart(2,'0'); return `${p(Math.floor(s/3600)%24)}:${p(Math.floor(s/60)%60)}:${p(s%60)}`; }
 
 const map = new maplibregl.Map({ container: 'map', center: [-122.375, 37.619], zoom: 13.6, pitch: 0, attributionControl: false,
   style: { version: 8, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b16' } }] } });
@@ -128,11 +137,17 @@ map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribut
 map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
 map.on('load', async () => {
-  [geo, scn] = await Promise.all([fetch(GEO).then(r => r.json()), fetch(SCN).then(r => r.json())]);
-  document.getElementById('hdr').textContent = `${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway}`;
-  document.getElementById('actors').innerHTML = `<div class="ac">▲ ${actorName('MPL212')}</div><div class="veh">■ ${actorName('RESCUE7')}</div><div style="color:var(--dim)">TWR / GND · San Francisco tower / ground</div>`;
+  scn = await fetch(SCN).then(r => r.json());
+  GEO = GEO || scn.geo || (scn.airport === 'KLGA' ? 'klga.geojson' : 'ksfo.geojson');
+  geo = await fetch(GEO).then(r => r.json());
+  document.getElementById('hdr').textContent = `${scn.title ? scn.title + ' · ' : ''}${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway}`;
+  if (FREEZE == null && scn.freeze) FREEZE = scn.freeze[MODE];
+  const atcLine = scn.airport === 'KLGA' ? 'LGA TOWER · local controller, transmitting on tower and ground' : 'TWR / GND · San Francisco tower / ground';
+  document.getElementById('actors').innerHTML = `<div class="ac">▲ ${actorName(landerId())}</div><div class="veh">■ ${actorName(crosserId())}</div><div style="color:var(--dim)">${atcLine}</div>`;
+  if (scn.airport === 'KLGA') { FACILITY.TWR = 'laguardia tower'; }
   // frame the crossing: intersection, the lander's last 2 km and the truck's whole path
-  map.setCenter([scn.intersection[0] + 0.004, scn.intersection[1] - 0.0012]); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : 14.6);
+  if (scn.center && scn.zoom){ map.setCenter(scn.center); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : scn.zoom); }
+  else { map.setCenter([scn.intersection[0] + 0.004, scn.intersection[1] - 0.0012]); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : 14.6); }
   const tw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'taxiway') };
   const rw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'runway') };
   const hp = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'holding_position') };
@@ -162,18 +177,26 @@ map.on('load', async () => {
   renderLookahead();
   if (LIVE) startLive();
   reset();
-  if (qs.get('autoplay') === '1'){ setTimeout(() => { playing = true; reset(); setPlay(); window.__startedAt = performance.now(); }, 1200); }  // let tiles/fonts settle
+  if (qs.get('autoplay') === '1'){ setTimeout(() => { window.__startedAt = performance.now(); showCard('open', CARD_MS, () => { playing = true; reset(); setPlay(); }); }, 1200); }  // let tiles/fonts settle
   requestAnimationFrame(tick);
 });
 
 function renderLookahead(){
-  const la = scn.alert.lookahead;
+  const la = scn.alert.lookahead, L = shortName(landerId()), C = shortName(crosserId());
   document.getElementById('lookahead').innerHTML = MODE === 'asis'
     ? `<tr><td style="color:var(--dim)">no cross-check: each clearance is valid on its own; nothing compares them</td></tr>`
-    : `<tr><th>MPL212 at TWY ${scn.crossing_taxiway}</th><td>t≈${la.lander_at_intersection}s</td></tr>` +
-      `<tr><th>landing roll window</th><td>${la.lander_window[0]}–${la.lander_window[1]} s</td></tr>` +
-      `<tr><th>RESCUE 7 on runway</th><td>${la.crosser_window[0]}–${la.crosser_window[1]} s</td></tr>` +
-      `<tr><th>predicted overlap</th><td class="bad">${la.overlap ? la.overlap[0] + '–' + la.overlap[1] + ' s' : 'none'}</td></tr>`;
+    : (la.lander_to_d_s != null
+      ? `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>in ~${la.lander_to_d_s} s</td></tr><tr><th>${C} on runway ${scn.runway}</th><td>in ~${la.truck_to_runway_s} s</td></tr><tr><th>predicted overlap</th><td class="bad">yes — same intersection, same seconds</td></tr>`
+      : `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>t≈${la.lander_at_intersection}s</td></tr>` +
+        `<tr><th>landing roll window</th><td>${la.lander_window[0]}–${la.lander_window[1]} s</td></tr>` +
+        `<tr><th>${C} on runway</th><td>${la.crosser_window[0]}–${la.crosser_window[1]} s</td></tr>` +
+        `<tr><th>predicted overlap</th><td class="bad">${la.overlap ? la.overlap[0] + '–' + la.overlap[1] + ' s' : 'none'}</td></tr>`);
+}
+function showCard(which, ms, then){
+  const c = document.getElementById('card'); const lines = (scn.cards && scn.cards[which]) || [];
+  if (!lines.length){ then && then(); return; }
+  c.innerHTML = lines.map((l, i) => `<div class="${i === 0 ? 'c1' : 'c2'}">${l}</div>`).join(''); c.className = 'on';
+  setTimeout(() => { c.className = ''; then && then(); }, ms);
 }
 function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); render(); }
 function conflictState(){
@@ -186,7 +209,7 @@ function conflictState(){
 function setCaption(text, cls){ const c = document.getElementById('caption'); c.textContent = text; c.className = text ? cls : ''; }
 function render(){
   const v = scn.variants[variant];
-  document.getElementById('clock').textContent = `t = ${t.toFixed(1)} s`;
+  document.getElementById('clock').innerHTML = scn.clock0 ? `<span class="wall">${wall(t)} EDT</span> t = ${t.toFixed(1)} s` : `t = ${t.toFixed(1)} s`;
   document.getElementById('scrub').value = t;
   const cs = conflictState();
   for (const x of v.transmissions){ const key = variant + ':' + x.t; if (t >= x.t && !shown.has(key)){ shown.add(key); addTx(x); } }
@@ -195,11 +218,11 @@ function render(){
   const vacated = t > scn.alert.lookahead.crosser_window[1] + 2 && !cs.resolved;
   const rows = [];
   if (MODE === 'asis'){
-    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>MPL212</td><td>valid</td></tr>`);
-    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>cross at ${scn.crossing_taxiway}</td><td>RESCUE 7</td><td>valid</td></tr>`);
+    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td>valid</td></tr>`);
+    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>cross at ${scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td>valid</td></tr>`);
   } else {
-    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>MPL212</td><td class="${cs.active ? 'bad' : 'ok'}">${cs.active ? 'CONFLICT' : 'active'}</td></tr>`);
-    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>${cs.resolved ? 'hold short' : 'cross at ' + scn.crossing_taxiway}</td><td>RESCUE 7</td><td class="${cs.resolved ? 'ok' : (cs.active ? 'bad' : (vacated ? 'ok' : 'warn'))}">${cs.resolved ? 'holding' : (cs.active ? 'CONFLICT' : (vacated ? 'vacated' : 'pending'))}</td></tr>`);
+    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td class="${cs.active ? 'bad' : 'ok'}">${cs.active ? 'CONFLICT' : 'active'}</td></tr>`);
+    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>${cs.resolved ? 'hold short' : 'cross at ' + scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td class="${cs.resolved ? 'ok' : (cs.active ? 'bad' : (vacated ? 'ok' : 'warn'))}">${cs.resolved ? 'holding' : (cs.active ? 'CONFLICT' : (vacated ? 'vacated' : 'pending'))}</td></tr>`);
   }
   document.getElementById('statebody').innerHTML = rows.join('') || '<tr><td colspan=4 style="color:var(--dim)">no active authorizations</td></tr>';
   const al = document.getElementById('alert'); const ban = document.getElementById('banner');
@@ -207,16 +230,19 @@ function render(){
     al.className = 'on'; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner on';
     al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>warning ${scn.alert.id} at t=${scn.alert.t.toFixed(1)} s · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div><div class="note">${scn.alert.note}</div>`;
   } else if (MODE === 'gmaps' && cs.resolved && t >= scn.alert.t){ al.className = 'on'; al.style.borderColor = 'var(--green)'; al.style.background = '#0d2a1a'; ban.className = 'banner';
-    al.innerHTML = `<div class="big" style="color:var(--green)">✓ CONFLICT CLEARED — RESCUE 7 holding short ${scn.runway} at ${scn.crossing_taxiway}</div><div class="note">${scn.alert.note}</div>`;
+    al.innerHTML = `<div class="big" style="color:var(--green)">✓ CONFLICT CLEARED — ${shortName(crosserId())} holding short ${scn.runway} at ${scn.crossing_taxiway}</div><div class="note">${scn.alert.note}</div>`;
   } else { al.className = ''; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner'; }
   if (MODE === 'gmaps' && cs.resolved) setCaption('Decision support only; the controller decides.', 'green');
-  const freezeNow = MODE === 'asis' && FREEZE != null && t >= FREEZE;
-  if (freezeNow && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay(); setCaption('AS-IS: two valid clearances, nobody cross-checked them', 'red'); setTimeout(() => window.__done = true, 4000); }
+  const freezeNow = FREEZE != null && t >= FREEZE;
+  if (freezeNow && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay();
+    const cap = (scn.captions && scn.captions[MODE]) || (MODE === 'asis' ? 'AS-IS: two valid clearances, nobody cross-checked them' : '');
+    setCaption(cap, MODE === 'asis' ? 'red' : 'green');
+    setTimeout(() => showCard('close', CARD_MS, () => setTimeout(() => window.__done = true, 300)), 2 * CARD_MS); }
   const now = performance.now();
   const needMap = map.getLayer('active') && (t !== lastMapT || cs.active !== lastConflict || ((cs.active || frozen) && now - lastMapAt > 66));
   if (needMap){
     lastMapT = t; lastMapAt = now; lastConflict = cs.active;
-    const hot = cs.active || frozen;
+    const hot = cs.active || (frozen && MODE === 'asis');
     const blink = hot ? (0.25 + 0.35 * (0.5 + 0.5 * Math.sin(performance.now() / 150))) : 0;
     map.setPaintProperty('active', 'line-opacity', blink);
     map.setPaintProperty('zone', 'circle-stroke-opacity', hot ? 0.9 : 0);
@@ -230,14 +256,14 @@ function render(){
   if (!frozen && t >= scn.duration && !window.__done) setTimeout(() => window.__done = true, 2000);
 }
 function speakerHtml(x){
-  if (x.speaker === 'TWR' || x.speaker === 'GND') return `<span class="spk atc">${x.speaker} · ${FACILITY[x.speaker]}</span>`;
-  const veh = x.speaker === 'RESCUE7';
+  if (x.speaker === 'TWR' || x.speaker === 'GND') return `<span class="spk atc">${shortName(x.speaker) !== x.speaker ? shortName(x.speaker) : x.speaker + ' · ' + FACILITY[x.speaker]}</span>`;
+  const veh = scn.variants[variant].aircraft.some(a => a.id === x.speaker && a.kind === 'vehicle');
   return `<span class="spk ${veh ? 'veh' : ''}">${actorName(x.speaker)}</span>`;
 }
 function addTx(x){
   const el = document.createElement('div'); el.className = 'tx';
-  el.innerHTML = `<div class="meta">${speakerHtml(x)}<span>t=${x.t.toFixed(1)}s</span></div>` +
-    `<div class="text">“${x.text}”</div><pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
+  el.innerHTML = `<div class="meta">${speakerHtml(x)}<span>${scn.clock0 ? wall(x.t) : 't=' + x.t.toFixed(1) + 's'}</span></div>` +
+    `<div class="text">“${x.text}”</div>${x.wording ? `<div class="wording">wording: ${x.wording.startsWith('as reported') ? x.wording : 'standard phraseology (reconstructed)'}</div>` : ''}<pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
     `<div class="chips">${x.actions.map(a => `<span class="chip ${MODE === 'asis' ? 'norule' : (CRIT.has(a) ? 'crit' : '')}">${a}</span>`).join('')}${MODE === 'asis' ? '<span class="chip norule">no rule run</span>' : ''}</div>`;
   const list = document.getElementById('txlist'); list.appendChild(el); list.parentElement.scrollTop = list.parentElement.scrollHeight;
   if (LIVE && (playing || qs.get('autoplay') !== '1')) liveParse(x);  // autoplay: no call for the pre-roll render
@@ -247,7 +273,7 @@ let gpuLine = '…', liveModel = 'student';
 function startLive(){
   const poll = () => fetch('/gpu').then(r => r.json()).then(j => { gpuLine = j.gpu; drawSparkHd(); }).catch(() => { gpuLine = 'proxy offline'; drawSparkHd(); });
   poll(); setInterval(poll, 2000);
-  const lc = document.getElementById('livecap'); lc.style.display = 'block'; lc.textContent = 'live on DGX Spark · Qwen3-8B + GMAPS LoRA · 0-shot';
+  const lc = document.getElementById('livecap'); lc.style.display = 'block'; lc.textContent = 'parser live on DGX Spark · Qwen3-8B + GMAPS LoRA · 0-shot';
 }
 function drawSparkHd(){
   document.getElementById('sparkhd').innerHTML = `model <b>${liveModel}</b> · Qwen3-8B + GMAPS LoRA (merged)<br><b>GB10 · bf16 · vLLM</b> · 0-shot · temp 0<br>GPU util, mem: <span class="gpu">${gpuLine}</span>`;
@@ -259,10 +285,10 @@ function liveParse(x){
   const el = document.createElement('div'); el.className = 'call pending';
   el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span>parsing…</span></div>`;
   const list = document.getElementById('livelist'); list.appendChild(el); list.scrollTop = list.scrollHeight;
-  fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: FACILITY[x.speaker] || FACILITY.GND }) })
+  fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: x.facility || FACILITY[x.speaker] || FACILITY.GND }) })
     .then(r => r.json()).then(j => {
       if (j.error) throw new Error(j.error);
-      liveModel = j.model; window.__live.push({ t: x.t, ...j });
+      liveModel = j.model; window.__live.push({ t: x.t, id: x.id, ...j });
       const same = typeof j.parsed === 'object' && norm(j.parsed) === norm(x.parsed);
       el.className = 'call';
       el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span><span class="ms">${Math.round(j.latency_ms)} ms</span> · ${j.tokens_in}→${j.tokens_out} tok</span></div>` +
