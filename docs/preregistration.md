@@ -29,3 +29,14 @@ One revision is allowed after the first full test run, decided by 12:00 PT: **ei
 - Test is pilot-heavy (148/288) while training is controller-heavy; dev numbers will not transfer directly.
 - The on-prem (DGX Spark, bf16) arm will be ~3 s/transmission; the hosted arm is the latency headline.
 - The dry-run adapter (1 epoch, Nov 1, `STATUS.md`) is reported as a separate row and is not the submitted model.
+
+## Addendum — Nov 2, 10:58 PT (after the kickoff talk, before any test result was scored)
+
+The organizers' kickoff (recorded 10:24 PT) defines the graded comparison as **before → after on the same open model**: "just by
+asking some model off the shelf to do this task, [vs] do it our way — by how much?"; closed models are explicitly *not required*
+and were shown as reference bars. Accordingly, two comparisons are reported, both with the paired-CI rule above, both on the same 288 rows:
+
+1. **Primary (event definition): before → after.** Qwen3-8B off the shelf, 5-shot (`accounts/fireworks/models/qwen3-8b`) → Qwen3-8B + LoRA, 0-shot. Full-record exact; paired Δ with 95% CI.
+2. **Reference: vs the strongest closed model**, Claude Opus 5.5 5-shot, as pre-registered above. Headline wording follows `MONDAY.md` §Headline for this comparison; it is reported whether or not it favours us.
+
+No model, prompt, data, or scorer change accompanies this addendum; it changes which comparison is called primary, to match the rubric as stated by the organizers. The frontier test runs were started at 10:53 PT; no result had been scored when this was written.
