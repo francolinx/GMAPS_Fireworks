@@ -347,6 +347,105 @@
     }
   },
   {
+    "model": "accounts/fireworks/models/nemotron-nano-3-30b-a3b",
+    "file": "nemotron-nano-30b-base_fwbatch-nothink_fs20.preds.jsonl",
+    "n": 288,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.8425357873210635,
+    "command_span_f1": 0.6582278481012659,
+    "value_f1": 0.5074135090609555,
+    "action_f1": 0.8387096774193548,
+    "action_exact": 0.8055555555555556,
+    "runway_critical_n": 69,
+    "runway_critical_exact": 0.8115942028985508,
+    "runway_critical_f1": 0.8811188811188811,
+    "role_acc": 0.42391304347826086,
+    "full_record_exact": 0.3263888888888889,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "latency_mean_ms": null,
+    "prompt_tokens": 607765,
+    "completion_tokens": 11144,
+    "cost_usd_total": 0.3094545,
+    "cost_usd_per_1k_segments": 1.0744947916666667,
+    "mcnemar_vs_first": {
+      "only_arm_right": 30,
+      "only_first_right": 58,
+      "p": 0.0037465093469812296
+    },
+    "ci95": {
+      "callsign_f1": [
+        0.7929687499999999,
+        0.8858447488584477
+      ],
+      "action_f1": [
+        0.7946666666666666,
+        0.8786407766990292
+      ],
+      "action_exact": [
+        0.753731343283582,
+        0.8530465949820788
+      ],
+      "runway_critical_exact": [
+        0.7,
+        0.9090909090909091
+      ],
+      "role_acc": [
+        0.36917562724014336,
+        0.4763779527559055
+      ],
+      "full_record_exact": [
+        0.2756183745583039,
+        0.3771626297577855
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": -0.034387289602013316,
+        "ci95": [
+          -0.07733265720081128,
+          0.007946520497092546
+        ]
+      },
+      "action_f1": {
+        "delta": -0.03655459319375309,
+        "ci95": [
+          -0.0739508213507305,
+          0.004228150002126063
+        ]
+      },
+      "action_exact": {
+        "delta": -0.03472222222222221,
+        "ci95": [
+          -0.08026755852842804,
+          0.011070110701107083
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": -0.10144927536231874,
+        "ci95": [
+          -0.18918918918918926,
+          -0.030303030303030276
+        ]
+      },
+      "role_acc": {
+        "delta": -0.15217391304347827,
+        "ci95": [
+          -0.2142857142857143,
+          -0.09056603773584904
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.09722222222222221,
+        "ci95": [
+          -0.15636363636363637,
+          -0.03806228373702425
+        ]
+      }
+    }
+  },
+  {
     "model": "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v1",
     "file": "atc-nemotron-nano-30b-v1_fwbatch-nothink_fs0.preds.jsonl",
     "n": 288,
@@ -1035,6 +1134,105 @@
         "ci95": [
           0.17543859649122812,
           0.33568904593639576
+        ]
+      }
+    }
+  },
+  {
+    "model": "google/gemini-4-argon",
+    "file": "google_gemini-4-argon_fs5.preds.jsonl",
+    "n": 288,
+    "missing": 0,
+    "json_valid": 0.9826388888888888,
+    "callsign_f1": 0.9151873767258383,
+    "command_span_f1": 0.724264705882353,
+    "value_f1": 0.6050670640834575,
+    "action_f1": 0.9178947368421052,
+    "action_exact": 0.8784722222222222,
+    "runway_critical_n": 69,
+    "runway_critical_exact": 0.8985507246376812,
+    "runway_critical_f1": 0.913907284768212,
+    "role_acc": 0.7717391304347826,
+    "full_record_exact": 0.6354166666666666,
+    "latency_p50_ms": 3650.189800000021,
+    "latency_p95_ms": 6503.0526230000305,
+    "latency_mean_ms": 3923.8806179236644,
+    "prompt_tokens": 231627,
+    "completion_tokens": 11015,
+    "cost_usd_total": 0.573404,
+    "cost_usd_per_1k_segments": 1.9909861111111113,
+    "mcnemar_vs_first": {
+      "only_arm_right": 94,
+      "only_first_right": 33,
+      "p": 5.6862817546381464e-08
+    },
+    "ci95": {
+      "callsign_f1": [
+        0.8744769874476988,
+        0.9495798319327731
+      ],
+      "action_f1": [
+        0.8866396761133604,
+        0.9449715370018976
+      ],
+      "action_exact": [
+        0.8374558303886925,
+        0.9172413793103448
+      ],
+      "runway_critical_exact": [
+        0.8103448275862069,
+        0.9722222222222222
+      ],
+      "role_acc": [
+        0.7112676056338029,
+        0.8283582089552238
+      ],
+      "full_record_exact": [
+        0.570446735395189,
+        0.6966292134831461
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": 0.03826429980276147,
+        "ci95": [
+          -0.0012416009348524826,
+          0.08024115703020196
+        ]
+      },
+      "action_f1": {
+        "delta": 0.042630466228997355,
+        "ci95": [
+          0.0054983977061898726,
+          0.07877461706783362
+        ]
+      },
+      "action_exact": {
+        "delta": 0.03819444444444442,
+        "ci95": [
+          -0.007168458781361964,
+          0.08273381294964033
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": -0.01449275362318836,
+        "ci95": [
+          -0.10344827586206895,
+          0.07017543859649122
+        ]
+      },
+      "role_acc": {
+        "delta": 0.19565217391304346,
+        "ci95": [
+          0.12337662337662336,
+          0.2683823529411765
+        ]
+      },
+      "full_record_exact": {
+        "delta": 0.21180555555555552,
+        "ci95": [
+          0.132404181184669,
+          0.29109589041095885
         ]
       }
     }
