@@ -40,3 +40,16 @@ and were shown as reference bars. Accordingly, two comparisons are reported, bot
 2. **Reference: vs the strongest closed model**, Claude Opus 5.5 5-shot, as pre-registered above. Headline wording follows `MONDAY.md` §Headline for this comparison; it is reported whether or not it favours us.
 
 No model, prompt, data, or scorer change accompanies this addendum; it changes which comparison is called primary, to match the rubric as stated by the organizers. The frontier test runs were started at 10:53 PT; no result had been scored when this was written.
+
+## Addendum 2 — Nov 2, 12:20 PT (after the test results were scored; a stricter decision rule, not a looser one)
+
+The Fireworks implementation session (Sinan Ozdemir, 11:30 PT) showed the organizers' sample project calling a difference real
+only if it passes **both** an exact McNemar test and a **cluster** bootstrap. We adopted that rule as an addition on top of the
+pre-registered one, because our test rows are not independent: the 288 segments come from 159 recordings, and a row bootstrap
+overstates the certainty. `bench/score.py` now resamples recordings (`--cluster recording`, 5,000 resamples) and reports the
+exact McNemar p-value against the first arm; "significant" means both.
+
+Verdicts did not change. Under the pre-registered row bootstrap (2,000 resamples) the before→after gap was +12.8 [+5.2, +20.1];
+under the recording bootstrap it is +12.8 [+5.9, +19.7] with McNemar p = 0.001. Opus vs LoRA: row [−18.1, −5.9], recording
+[−18.4, −5.7], p = 0.0002. The router's +1.7 over the LoRA alone and Opus 20-shot's +0.7 over 5-shot fail both tests under both rules.
+No model, prompt, data, scorer-metric, or arm change accompanies this addendum.

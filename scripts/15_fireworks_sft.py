@@ -71,7 +71,7 @@ def cmd_train(args):
         dataset=f"accounts/{aid}/datasets/{args.dataset}",
         base_model=args.base,
         epochs=args.epochs, learning_rate=args.lr, lora_rank=args.rank,
-        output_model=args.out, display_name=args.out, is_turbo=not args.no_turbo,
+        output_model=f"accounts/{aid}/models/{args.out}", display_name=args.out, is_turbo=not args.no_turbo,
     )
     if args.eval:
         kwargs["evaluation_dataset"] = f"accounts/{aid}/datasets/{args.eval}"
@@ -119,6 +119,58 @@ def cmd_deploy(args):
     print(f"serve name to use with bench/infer.py: {model}  (check `models` for the exact deployed model id)")
 
 
+def cmd_deploy_ondemand(args):
+    """On-demand deployment of the BASE model with PEFT addons enabled, then load the LoRA onto it.
+    qwen3-8b has no serverless-LoRA support on this account, so this is the route for the test run.
+    Billing is per GPU-hour while the deployment exists: run `undeploy` as soon as the eval is scored."""
+    c = client(); aid = account_id(c)
+    dep_id = args.deployment_id
+    try:
+        d = c.deployments.get(deployment_id=dep_id, account_id=aid)
+        print("deployment exists:", d.name, getattr(d, "state", ""))
+    except Exception:
+        print(f"creating on-demand deployment {dep_id}: base={args.base} {args.accelerator} x{args.count} precision={args.precision}")
+        d = c.deployments.create(account_id=aid, deployment_id=dep_id, base_model=args.base, display_name=dep_id,
+                                 enable_addons=True, accelerator_type=args.accelerator, accelerator_count=args.count,
+                                 min_replica_count=1, max_replica_count=1, precision=args.precision,
+                                 description="GMAPS frozen-test eval of the ATC LoRA (temporary)")
+        print("created:", d.name)
+    for _ in range(120):
+        d = c.deployments.get(deployment_id=dep_id, account_id=aid)
+        st = str(getattr(d, "state", ""))
+        print(time.strftime("%H:%M:%S"), "deployment", st, getattr(d, "status", "") or "")
+        if st.upper().endswith("READY"):
+            break
+        if st.upper().endswith("FAILED"):
+            sys.exit("deployment failed")
+        time.sleep(15)
+    model = args.model if args.model.startswith("accounts/") else f"accounts/{aid}/models/{args.model}"
+    dep_name = f"accounts/{aid}/deployments/{dep_id}"
+    r = c.lora.load(account_id=aid, model=model, deployment=dep_name, display_name=args.model.split("/")[-1])
+    print("lora.load →", r)
+    for _ in range(60):
+        dm = c.lora.get(deployed_model_id=r.name.split("/")[-1], account_id=aid) if hasattr(c.lora, "get") else r
+        st = str(getattr(dm, "state", ""))
+        print(time.strftime("%H:%M:%S"), "deployed model", st)
+        if st.upper().endswith("DEPLOYED"):
+            break
+        time.sleep(10)
+    print("\nserve name for bench/infer.py --model:", f"{model}#{dep_name}")
+    print("BASE_URL=https://api.fireworks.ai/inference/v1")
+
+
+def cmd_undeploy(args):
+    c = client(); aid = account_id(c)
+    try:
+        for dm in getattr(c.lora.list(account_id=aid), "deployed_models", []) or []:
+            if args.deployment_id in str(getattr(dm, "deployment", "")):
+                print("unloading", dm.name); c.lora.unload(deployed_model_id=dm.name.split("/")[-1], account_id=aid)
+    except Exception as e:
+        print("unload skipped:", e)
+    print("deleting deployment", args.deployment_id)
+    print(c.deployments.delete(deployment_id=args.deployment_id, account_id=aid, ignore_checks=True))
+
+
 def main():
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -129,6 +181,10 @@ def main():
     p = sub.add_parser("status"); p.add_argument("job_id"); p.add_argument("--once", action="store_true"); p.set_defaults(fn=cmd_status)
     p = sub.add_parser("models"); p.set_defaults(fn=cmd_models)
     p = sub.add_parser("deploy"); p.add_argument("model"); p.add_argument("--deployment"); p.set_defaults(fn=cmd_deploy)
+    p = sub.add_parser("deploy-ondemand"); p.add_argument("model"); p.add_argument("--deployment-id", default="atc-eval")
+    p.add_argument("--base", default="accounts/fireworks/models/qwen3-8b"); p.add_argument("--accelerator", default="NVIDIA_H100_80GB")
+    p.add_argument("--count", type=int, default=1); p.add_argument("--precision", default="BF16"); p.set_defaults(fn=cmd_deploy_ondemand)
+    p = sub.add_parser("undeploy"); p.add_argument("--deployment-id", default="atc-eval"); p.set_defaults(fn=cmd_undeploy)
     args = ap.parse_args(); args.fn(args)
 
 

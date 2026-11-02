@@ -32,7 +32,7 @@
 - **Split by airport, no leakage:** test = Sydney (YSSY) + Prague (LKPR) + Bratislava (LZIB) = **288 transmissions, three countries the model never sees in training**. Train 504 / dev 85 from Bern, Sion, Zurich, Brno. Test is pilot-heavy (148 pilot / 128 controller) while train is controller-heavy — a real distribution shift, reported as such.
 - `sha256(test.jsonl) = 8660e6de…31cd`, committed Oct 31 (`data/splits/test.sha256`); `scripts/10_eval_test.sh` refuses to run if the hash changes. Test was first evaluated during the build period.
 
-**Metrics** (`bench/score.py`, identical for every arm, with row-bootstrap 95% CIs and *paired* deltas vs the baseline on the same 288 rows):
+**Metrics** (`bench/score.py`, identical for every arm, with *paired* deltas vs the baseline on the same 288 rows, recording-cluster bootstrap 95% CIs (5,000 resamples) and an exact McNemar test — a difference counts only if both agree):
 
 | Metric | What it answers |
 |---|---|
@@ -97,7 +97,15 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 
 **What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm is within noise of every other (88–91%): all of them know what "cleared to land" means; what separates them is who said it and to whom.
 
-**Where our model still loses to Opus** (`scripts/16_error_analysis.py`): role swaps (58 vs 42), and approach/radar-side instructions under-represented in tower-heavy training — APPROACH_CLEARANCE recall 64% vs 86%, SPEED 29% vs 100%, REPORT 57% vs 100%. On runway-critical rows the two are even (LoRA right alone on 4, Opus right alone on 6, both right on 40). 69 of 288 rows are wrong for both — the ceiling the gold's own noise sets.
+![Per-action recall on the test split](docs/per_action_recall.png)
+
+**Where our model still loses to Opus** (`scripts/16_error_analysis.py`, `scripts/20_figures.py recall`): role swaps (58 vs 42), and approach/radar-side instructions under-represented in tower-heavy training — APPROACH_CLEARANCE recall 64% vs 86%, SPEED 29% vs 100%, REPORT 57% vs 100%. On runway-critical rows the two are even (LoRA right alone on 4, Opus right alone on 6, both right on 40). 69 of 288 rows are wrong for both — the ceiling the gold's own noise sets.
+
+**What we tried that did not help** (all of it is in the tables above, as the Fireworks sample project asks): a router that sends the LoRA's empty / callsign-less / role-unknown outputs to Opus adds +1.7 points over the LoRA alone (56.9% vs 55.2%, Δ [−1.2, +4.5] — not significant) for 30× the cost, because the LoRA's failures are confident wrong answers, not abstentions; and 20-shot instead of 5-shot for Opus changes nothing (+0.7, not significant). Our worst experiment was the router: a good idea on paper that the paired test killed in one line.
+
+**Training.** LoRA rank 16, α 32, on the attention and MLP projections; one epoch over 5,600 examples (ATCO2 train gold ×3 with Opus-filled roles, pseudo-labelled UWB-ATCC / ATCOSIM validated as verbatim spans, synthetic US phraseology), lr 2e-4, batch 16, max 1,024 tokens, bf16 on the DGX Spark (2 h 05 min). The loss settles within the first tenth of the epoch; the v2 run (§7) is the same recipe with three epochs and the loss restricted to the response tokens.
+
+![Training loss](docs/loss_curve.png)
 
 **Cost at tower scale** (10,000 transmissions/day per hub, list prices × measured tokens, ~520 US towers): Opus 5-shot ≈ **$99/day/airport, ≈ $18.8M/yr** nationally; the fine-tuned 8B hosted ≈ **$0.80/day, ≈ $150k/yr**; on a DGX Spark in the tower, ≈ $0 marginal — and only the last two can run without sending live tower audio off-site.
 
