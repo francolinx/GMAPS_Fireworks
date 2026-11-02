@@ -41,7 +41,7 @@ and were shown as reference bars. Accordingly, two comparisons are reported, bot
 
 No model, prompt, data, or scorer change accompanies this addendum; it changes which comparison is called primary, to match the rubric as stated by the organizers. The frontier test runs were started at 10:53 PT; no result had been scored when this was written.
 
-## Addendum 2 — Nov 2, 12:20 PT (after the test results were scored; a stricter decision rule, not a looser one)
+## Addendum 2 — Nov 2, 12:05 PT (after the test results were scored; a stricter decision rule, not a looser one)
 
 The Fireworks implementation session (Sinan Ozdemir, 11:30 PT) showed the organizers' sample project calling a difference real
 only if it passes **both** an exact McNemar test and a **cluster** bootstrap. We adopted that rule as an addition on top of the
@@ -54,7 +54,7 @@ under the recording bootstrap it is +12.8 [+5.9, +19.7] with McNemar p = 0.001. 
 [−18.4, −5.7], p = 0.0002. The router's +1.7 over the LoRA alone and Opus 20-shot's +0.7 over 5-shot fail both tests under both rules.
 No model, prompt, data, scorer-metric, or arm change accompanies this addendum.
 
-## Addendum 3 — Nov 2, 14:35 PT (Nemotron arms: reasoning setting, decided after seeing test numbers)
+## Addendum 3 — Nov 2, 12:50 PT (Nemotron arms: reasoning setting, decided after seeing test numbers)
 
 Two extra arms were added during the build period on a second open model, Nemotron-3-Nano-30B-A3B (off the shelf, 5-shot;
 + our LoRA, 0-shot), following the same protocol as the Qwen3-8B before→after (same prompt, shots from train, same scorer,

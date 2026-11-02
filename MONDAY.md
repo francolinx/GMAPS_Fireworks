@@ -79,19 +79,19 @@ Cloud has the v2 mix (7,857 ex) and the Fireworks SDK route ready; test file sta
 
 Tower supervisors / ATC training programs; decision support only. Pilot via university aviation programs (Embry-Riddle, CCBC contacts). Why open: live tower audio cannot leave the building; ~10k transmissions/day per hub across all frequencies; ~520 US towers. Cost line from measured tokens: frontier ≈ $[x]/day/airport vs ours ≈ $[y]/day — but lead with on-prem, not dollars.
 
-## 12:55 PT — state of play (cloud session)
+## 12:20 PT — state of play (cloud session)
 
 - Frozen test scored once for seven arms (10:53–11:40). Primary: base 42.4 → dry-run LoRA 55.2 (+12.8, significant under both the pre-registered row bootstrap and the stricter McNemar + recording bootstrap, prereg addendum 2). Opus 67.4 (reference). Router and 20-shot: not significant → listed as "what did not help".
 - Fireworks dataset uploads were enabled by the organizers around 12:00; both jobs launched from `scripts/15_fireworks_sft.py`:
-  - `rtkwkax2` Qwen3-8B LoRA r16, 3 epochs, lr 1e-4, ctx 2048 — ETA ≈ 14:35 PT (18 % at 12:46). Unattended pipeline `scripts/21_fw_v2_pipeline.sh` (background task) deploys on an on-demand H100 with addons, runs the frozen test 0-shot, rescores all arms, tears the deployment down.
+  - `rtkwkax2` Qwen3-8B LoRA r16, 3 epochs, lr 1e-4, ctx 2048 — completed 12:37 PT. Unattended pipeline `scripts/21_fw_v2_pipeline.sh` (background task) deploys on an on-demand H100 with addons, runs the frozen test 0-shot, rescores all arms, tears the deployment down.
   - `g0tr55s3` Nemotron-3-Nano-30B-A3B LoRA r16, 1 epoch — the NVIDIA arm Sagar's session asked for; `scripts/23_fw_nemotron_pipeline.sh` runs base 5-shot and LoRA 0-shot through one deployment.
-- Hard stop for new numbers: **15:05 PT**. If a job is not scored by then, the README keeps the dry-run row and §7 says the job did not finish; the deployment is deleted regardless (H100 on-demand bills $8/h).
+- Hard stop for new numbers: **15:00 PT**. If a job is not scored by then, the README keeps the dry-run row and §7 says the job did not finish; the deployment is deleted regardless (H100 on-demand bills $8/h).
 - After scores land: `scripts/11_score_test.sh` (baseline first) → `scripts/18_results_chart.py` → README §4 rows + headline → deck results slide → video segment 5 (`docs/video/`) → DISCLOSURE unchanged (build-period work) → push.
 - Spend: ≈ $6 so far (Qwen SFT), ≈ $11 Nemotron SFT, ≈ $3–6 for the two temporary deployments; the $50 credit covers it.
 
-## 15:05 PT — numbers are in (cloud session)
+## 13:00 PT — numbers are in (cloud session)
 
 - Qwen3-8B v2 (Fireworks, 3 epochs): 59.7 (+17.4 vs base, significant; −7.6 vs Opus, significant; +4.5 vs v1, n.s.). Hosted p50 0.70 s.
 - Nemotron-3-Nano-30B-A3B + LoRA (Fireworks, 1 epoch): **70.1 vs Opus 67.4 → tie** ([−2.0, +7.4], p = 0.30); +30.9 vs its own base. Reasoning-on first attempt (29.5 → 49.0) kept in the table; addendum 3.
 - Headline wording (CI straddles 0 → "matches"): "A fine-tuned open NVIDIA model matches Claude Opus 5.5 on real tower radio (70.1% vs 67.4%, paired 95% CI [−2.0, +7.4]) at ~1/45th the cost — and it can run inside the tower."
-- Lightning 3.5 job `zdi4wg97` + base batch eval running; add the row if it lands before 16:15, else §7 says so.
+- Lightning 3.5 job `zdi4wg97` (launched 12:59) + base batch eval running; add the row when it lands (expected ~13:45).
