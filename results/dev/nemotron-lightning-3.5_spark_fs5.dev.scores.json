@@ -1,0 +1,26 @@
+[
+  {
+    "model": "nemotron-lightning-3.5-30b",
+    "file": "nemotron-lightning-3.5_spark_fs5.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9044585987261147,
+    "command_span_f1": 0.6081871345029239,
+    "value_f1": 0.4057971014492754,
+    "action_f1": 0.9457364341085271,
+    "action_exact": 0.9294117647058824,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9508196721311475,
+    "role_acc": 0.6567164179104478,
+    "full_record_exact": 0.5882352941176471,
+    "latency_p50_ms": 1518.0985949991737,
+    "latency_p95_ms": 1977.1190009996644,
+    "latency_mean_ms": 1523.4332185411724,
+    "prompt_tokens": 72226,
+    "completion_tokens": 3525,
+    "cost_usd_total": null,
+    "cost_usd_per_1k_segments": null
+  }
+]

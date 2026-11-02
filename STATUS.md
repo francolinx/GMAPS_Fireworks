@@ -67,3 +67,11 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 - viz static server on :8081 (`python3 -m http.server`, from `viz/`): **yes**
 - container `atc-train` (pytorch 25.11 + pinned TRL stack, idle, `sleep infinity`): yes — `docker rm -f atc-train` to free it
 - teacher `vllm-teacher` on :8002: stopped. Port 8000 untouched.
+
+## Lightning 3.5 on the Spark (Nov 2 pm)
+- Model: `nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4` (21.6 GB, 52 shards) at `~/ssd/GB10_ARSENAL/models/reasoning/nemotron-3.5-lightning-30b-a3b-nvfp4` — the external SSD is not mounted at `/mnt/hackssd`, so this is the local-disk copy. The `-DSpark` repo is only the 1.35 GB speculative-decoding drafter (no tokenizer, can't be served alone) and was **not** used: no speculative decoding, which keeps it the under-cap configuration.
+- Served: `scripts/06_serve_vllm.sh <dir> nemotron-lightning-3.5-30b 8002 --max-model-len 4096 --moe-backend marlin --kv-cache-dtype fp8 --enable-prefix-caching --mamba-backend flashinfer --mamba-cache-mode align --reasoning-parser nemotron_v3` (vLLM v0.27.1, GPU_UTIL 0.55).
+- Request: 5-shot (shots from `train.jsonl`), `max_tokens 1500`, `{"reasoning_effort":"none"}` → clean JSON, no reasoning text, ~40 output tokens/segment. Concurrency 4.
+- **Dev (n=85):** JSON valid 100.0% · Callsign F1 90.4% · Cmd span F1 60.8% · Value F1 40.6% · Action F1 94.6% · Runway-critical exact 100.0% (n=29) · Role acc 65.7% · **Full record exact 58.8%**
+- **Latency on the Spark:** p50 **1518 ms**, p95 **1977 ms** per transmission (at concurrency 4).
+- Files: `results/dev/nemotron-lightning-3.5_spark_fs5.preds.jsonl`, `results/dev/nemotron-lightning-3.5_spark_fs5.dev.scores.json`. Test split not touched.
