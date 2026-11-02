@@ -53,3 +53,15 @@ Verdicts did not change. Under the pre-registered row bootstrap (2,000 resamples
 under the recording bootstrap it is +12.8 [+5.9, +19.7] with McNemar p = 0.001. Opus vs LoRA: row [−18.1, −5.9], recording
 [−18.4, −5.7], p = 0.0002. The router's +1.7 over the LoRA alone and Opus 20-shot's +0.7 over 5-shot fail both tests under both rules.
 No model, prompt, data, scorer-metric, or arm change accompanies this addendum.
+
+## Addendum 3 — Nov 2, 14:35 PT (Nemotron arms: reasoning setting, decided after seeing test numbers)
+
+Two extra arms were added during the build period on a second open model, Nemotron-3-Nano-30B-A3B (off the shelf, 5-shot;
++ our LoRA, 0-shot), following the same protocol as the Qwen3-8B before→after (same prompt, shots from train, same scorer,
+`max_tokens` 1,500). The first run used the model's default (reasoning on): the base spent ~1,000 tokens per transmission
+thinking and 82/288 answers never reached the JSON before the cap; the LoRA lost 17 rows the same way. We re-ran **both**
+Nemotron arms with `reasoning_effort: "none"` — the setting the NVIDIA enablement session used for this model, and the
+equivalent of the `enable_thinking: false` every Qwen3 arm already had. Because this was decided after seeing test numbers,
+both versions are kept in `results/test/` and both are in the README table; the reasoning-off version is the one in the
+headline. The primary pre-registered comparison (Qwen3-8B before→after) is unchanged by this addendum. The Nemotron-vs-Opus
+comparison is reported with the two-test rule and is a tie (+2.8, [−2.0, +7.4], p = 0.30).

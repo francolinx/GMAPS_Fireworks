@@ -32,12 +32,17 @@ LABELS = {  # model name → display name; the shot count is appended from the p
     "accounts/francolinjo-co18wqhx/models/atc-qwen3-8b-v2#accounts/francolinjo-co18wqhx/deployments/atc-eval2": "Qwen3-8B + LoRA v2 (Fireworks SFT, hosted)",
     "accounts/fireworks/models/nemotron-nano-3-30b-a3b": "Nemotron-3-Nano-30B-A3B off the shelf (Fireworks)",
     "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v1": "Nemotron-3-Nano-30B-A3B + LoRA (Fireworks SFT)",
+    "nemotron-nano-30b-base_fwbatch_fs5": "Nemotron-30B off the shelf, reasoning on (1,500-token cap hit)",
+    "atc-nemotron-nano-30b-v1_fwbatch_fs0": "Nemotron-30B + LoRA, reasoning on (first attempt)",
+    "nemotron-nano-30b-base_fwbatch-nothink_fs5": "Nemotron-3-Nano-30B-A3B off the shelf (Fireworks)",
+    "atc-nemotron-nano-30b-v1_fwbatch-nothink_fs0": "Nemotron-3-Nano-30B-A3B + our LoRA (Fireworks SFT)",
 }
 import re
 
 
 def display(r, labels):
-    name = labels.get(r["model"], r["model"])
+    stem = (r.get("file", "") or "").replace(".preds.jsonl", "")
+    name = labels.get(stem, labels.get(r["model"], r["model"]))   # a file-stem label wins over the model-name label
     m = re.search(r"_fs(\d+)", r.get("file", "") or "")
     if m:
         name += f", {m.group(1)}-shot" if m.group(1) != "0" else ", 0-shot"
@@ -87,7 +92,7 @@ def main():
     ax.set_yticks(range(len(rows))); ax.set_yticklabels([r[0] for r in rows], fontsize=9.5)
     ax.set_xlim(0, 100); ax.set_xlabel(TITLES.get(m, m)); ax.spines[["top", "right"]].set_visible(False)
     ax.set_title(args.title, loc="left", fontsize=14, pad=18)
-    fig.text(0.125, 0.93, args.subtitle or f"{n} held-out real transmissions · same prompt, scorer and rows for every arm · Δ = paired vs baseline, 95% bootstrap CI", fontsize=9, color="#444")
+    fig.text(0.125, 0.93, args.subtitle or f"{n} held-out real transmissions · same prompt, scorer and rows for every arm · Δ = paired vs baseline · significant = McNemar p<0.05 and recording-bootstrap 95% CI excludes 0", fontsize=9, color="#444")
     fig.tight_layout(rect=(0, 0, 0.98, 0.94))
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     fig.savefig(args.out, bbox_inches="tight")

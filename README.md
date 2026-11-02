@@ -4,7 +4,7 @@
 
 ![GMAPS runway monitor — KSFO 28L, SIM212 cleared to land, RESCUE7 cleared to cross at E](docs/runway_monitor_sfo_28l.png)
 
-**One sentence.** On 288 real tower transmissions from three airports it never saw, a LoRA on Qwen3-8B lifts full-record accuracy from **42.4% to 55.2% (+12.8, 95% CI [+5.9, +19.8], p = 0.001)** and reaches 82% of Claude Opus 5.5's score at ~1/100th the per-transmission cost — on a model that can run inside the tower on a DGX Spark with no internet.
+**One sentence.** On 288 real tower transmissions from three airports it never saw, a one-epoch LoRA on NVIDIA's open Nemotron-3-Nano-30B-A3B goes from **39.2% to 70.1%** full-record accuracy and **ties Claude Opus 5.5 (67.4%; paired Δ +2.8, 95% CI [−2.0, +7.4])** at ~1/45th the per-transmission cost; the pre-registered 8B arm (Qwen3-8B) goes from **42.4% to 59.7% (+17.4 [+10.5, +24.5], p = 7 × 10⁻⁷)** and answers in 0.7 s hosted — both are open weights that can run inside the tower on a DGX Spark with no internet.
 
 ## 1. Project overview
 
@@ -55,47 +55,62 @@
 
 ![Before → after on the frozen test split](docs/results_full_record.png)
 
-**Before → after (the graded comparison).** Qwen3-8B off the shelf, 5-shot: **42.4%** full-record exact. The same model with our LoRA, 0-shot: **55.2%** — **+12.8 points, recording-cluster bootstrap 95% CI [+5.9, +19.8], McNemar p = 0.001**, on 288 real transmissions from three airports it never saw. Role accuracy +17.4 points [+10.5, +24.3]. Clearance-state accuracy is unchanged within noise (88.4% vs 91.3%, Δ −2.9 [−7.3, 0.0]): the fine-tune's gain is in knowing *who* is speaking and *which aircraft*, not in reading the clearance words, which the base already does. This row is the **Nov 1 dry-run adapter** (1 epoch, loss on prompt tokens, 30B-teacher labels, `STATUS.md`); the v2 training run described in §7 is the submitted model if it finished in time — see the row marked v2 below, or its absence.
+**Headline.** A fine-tuned open NVIDIA model **matches Claude Opus 5.5 on real tower radio**: Nemotron-3-Nano-30B-A3B + our LoRA (one epoch on Fireworks, $10.16 of training, 0-shot) scores **70.1%** full-record exact on the 288 frozen test transmissions vs Opus 5.5's **67.4%** (5-shot) — paired Δ +2.8, recording-bootstrap 95% CI [−2.0, +7.4], McNemar p = 0.30: a statistical tie, at roughly **1/45th of the per-transmission cost** ($0.22 vs $9.92 per 1,000) and with weights that can run inside the tower. Against its own off-the-shelf base (39.2%, 5-shot) the gain is **+30.9 points [+23.8, +37.9], p = 7 × 10⁻¹⁷**.
 
-**Reference — the strongest closed model.** Claude Opus 5.5, 5-shot: 67.4% [61.5, 72.6]. We are **12.2 points behind it** on full record (paired Δ −12.2 [−18.1, −5.9]) and tied on clearance-state accuracy (88.4% vs 89.9%, Δ −1.4 [−7.7, +4.9]), at roughly **1/100th the per-transmission cost** on hosted inference and zero marginal cost on the Spark in the tower.
+**The pre-registered primary comparison (before → after on Qwen3-8B).** Off the shelf, 5-shot: **42.4%**. The same model with our LoRA — v2, three epochs on Fireworks, 0-shot: **59.7%**, **+17.4 points [+10.5, +24.5], McNemar p = 7 × 10⁻⁷**, hosted p50 **0.70 s**. The Nov 1 dry-run adapter (one epoch on the DGX Spark) scored 55.2% (+12.8 [+5.9, +19.7]); v2 over v1 is +4.5 [−1.7, +10.8], not significant on 288 rows. Role accuracy is where the fine-tune gains (57.6% → 79.3%); clearance-state accuracy on the 69 runway-critical rows is unchanged within noise for every open arm (88–91%), and the 8B v2 ties Opus on it exactly (89.9% vs 89.9%). The 8B is still **7.6 points behind Opus** on full record ([−13.9, −1.5], significant); the 30B closes that gap.
 
-All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `results/test/scores.md`):
+All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `results/test/scores.md`); "reasoning off" = `enable_thinking: false` for Qwen3 and `reasoning_effort: none` for Nemotron, applied to the base and the LoRA alike:
 
 | Arm | Where it ran | Clearance-state acc (n=69) | Full record exact (n=288) | Action F1 | Callsign F1 | Role acc | p50 / p95 | $/1k transmissions |
 |---|---|---|---|---|---|---|---|---|
 | **Qwen3-8B off the shelf, 5-shot (baseline)** | DGX Spark, bf16, vLLM | 91.3% | **42.4%** | 87.5% | 87.7% | 57.6% | 2.9 s / 3.9 s | $0.20 hosted¹ / ~0 on-prem |
-| **Qwen3-8B + LoRA (ours, dry-run adapter), 0-shot** | DGX Spark, bf16, vLLM | 88.4% | **55.2%** | 85.8% | 89.0% | 75.0% | 3.0 s / 4.1 s | $0.08 hosted¹ / ~0 on-prem |
-| Router: LoRA → Opus when the LoRA output is empty / has no callsign / role unknown | mixed | 88.4% | 56.9% | 87.1% | 89.8% | 75.4% | 3.3 s / 8.4 s | $2.46 |
+| Qwen3-8B + LoRA v1 (Nov 1 dry run, 1 epoch, DGX Spark), 0-shot | DGX Spark, bf16, vLLM | 88.4% | 55.2% | 85.8% | 89.0% | 75.0% | 3.0 s / 4.1 s | $0.08 hosted¹ / ~0 on-prem |
+| **Qwen3-8B + LoRA v2 (3 epochs, Fireworks SFT `rtkwkax2`), 0-shot** | Fireworks, on-demand H100 | 89.9% | **59.7%** | 87.5% | 89.4% | 79.3% | **0.70 s** / 7.6 s² | $0.09 |
+| Nemotron-3-Nano-30B-A3B off the shelf, 5-shot | Fireworks batch | 81.2% | 39.2% | 86.6% | 88.1% | 50.0% | — ³ | $0.45 |
+| **Nemotron-3-Nano-30B-A3B + LoRA (1 epoch, Fireworks SFT `g0tr55s3`), 0-shot** | Fireworks batch | 88.4% | **70.1%** | 92.8% | 94.0% | 83.0% | — ³ | $0.22 |
 | Claude Opus 5.5, 5-shot | API via OpenRouter | 89.9% | 67.4% | 91.2% | 93.4% | 81.5% | 5.3 s / 7.2 s | $9.92 |
 | Claude Opus 5.5, 20-shot (fairness check) | API via OpenRouter | 88.4% | 68.1% | 91.1% | 94.3% | 81.9% | 3.8 s / 6.1 s | $14.48 |
 | GPT-5.5, 5-shot | API via OpenRouter | 88.4% | 53.1% | 90.9% | 93.2% | 65.9% | 3.7 s / 8.8 s | $10.40 |
 | GPT-5.6 Terra, 5-shot | API via OpenRouter | 88.4% | 49.0% | 87.9% | 92.5% | 61.6% | 2.4 s / 3.7 s | $2.62 |
+| Router: LoRA v1 → Opus when the LoRA output is empty / has no callsign / role unknown | mixed | 88.4% | 56.9% | 87.1% | 89.8% | 75.4% | 3.3 s / 8.4 s | $2.46 |
+| *Nemotron-30B off the shelf, 5-shot, reasoning **on** (first attempt)* | Fireworks batch | 59.4% | 29.5% | 67.7% | 76.0% | 36.2% | — | $0.92 |
+| *Nemotron-30B + LoRA, 0-shot, reasoning **on** (first attempt)* | Fireworks batch | 85.5% | 49.0% | 85.5% | 89.2% | 59.8% | — | $0.52 |
 
-¹ Fireworks serverless list price for the 4–16B tier ($0.20/M tokens in and out) × the measured token counts (≈1,000 prompt tokens at 5-shot, ≈400 at 0-shot). Latency for the Spark arms is localhost on a GB10 (bandwidth-bound in bf16); for the API arms it is from the same cloud VM through OpenRouter.
+¹ Fireworks serverless list price for the 4–16B tier ($0.20/M tokens in and out) × the measured token counts (≈1,000 prompt tokens at 5-shot, ≈400 at 0-shot); Nemotron rows use the MoE 0–56B tier ($0.50/M). Latency for the Spark arms is localhost on a GB10 (bandwidth-bound in bf16); for the API arms it is from the same cloud VM through OpenRouter. ² p95 includes the deployment's cold start on the first requests; steady-state p50 0.70 s at 8 concurrent requests. ³ Batch inference reports no per-request latency; the Nemotron arms ran as Fireworks batch jobs because this account has no on-demand deployment configuration for that base.
 
-**Paired deltas vs the off-the-shelf baseline, 95% CI** (`results/test/scores.md`):
+**The two Nemotron rows in italics are our first attempt and are kept on purpose.** With the model's default reasoning on, the off-the-shelf 30B spent ~1,000 tokens thinking per transmission and 82 of 288 answers never reached the JSON before the 1,500-token cap (JSON validity 71%); the LoRA still reasoned (mean 646 tokens) and lost 17 rows the same way. Turning reasoning off — the same setting the NVIDIA enablement session used (`reasoning_effort="none"`) and the same treatment Qwen3 gets (`enable_thinking: false`) — was applied to **both** Nemotron arms and is the version in the headline. This was decided after seeing the reasoning-on test numbers, so it is recorded as addendum 3 of `docs/preregistration.md`; both versions are in `results/test/`.
+
+**Paired deltas vs the off-the-shelf Qwen3-8B baseline, recording-bootstrap 95% CI** (`results/test/scores.md`):
 
 | Arm | Full record | Clearance-state | Action F1 | Callsign F1 | Role |
 |---|---|---|---|---|---|
-| Qwen3-8B + LoRA (ours) | +12.8 [+5.9, +19.7] | -2.9 [-7.5, +0.0] | -1.7 [-4.8, +1.7] | +1.3 [-1.7, +4.4] | +17.4 [+10.4, +24.4] |
-| Claude Opus 5.5, 5-shot | +25.0 [+16.8, +33.1] | -1.4 [-8.3, +4.3] | +3.7 [+0.2, +7.4] | +5.7 [+2.7, +8.9] | +23.9 [+16.7, +31.2] |
-| Claude Opus 5.5, 20-shot | +25.7 [+17.5, +33.6] | -2.9 [-10.6, +3.2] | +3.6 [-0.0, +7.3] | +6.6 [+3.6, +10.0] | +24.3 [+17.1, +31.4] |
-| GPT-5.5, 5-shot | +10.8 [+4.0, +17.3] | -2.9 [-10.1, +3.2] | +3.3 [-0.6, +7.3] | +5.5 [+2.7, +8.6] | +8.3 [+2.9, +13.8] |
-| GPT-5.6 Terra, 5-shot | +6.6 [+0.3, +13.0] | -2.9 [-7.1, +0.0] | +0.4 [-3.9, +4.5] | +4.9 [+2.2, +7.8] | +4.0 [-1.5, +9.5] |
-| Router: LoRA → Opus | +14.6 [+7.2, +21.9] | -2.9 [-7.5, +0.0] | -0.4 [-3.3, +2.8] | +2.1 [-1.1, +5.3] | +17.8 [+10.7, +24.9] |
+| Qwen3-8B + LoRA v1 (dry run) | +12.8 [+5.9, +19.7] | −2.9 [−7.5, +0.0] | −1.7 [−4.8, +1.7] | +1.3 [−1.7, +4.4] | +17.4 [+10.4, +24.4] |
+| **Qwen3-8B + LoRA v2** | **+17.4 [+10.5, +24.5]** | −1.4 [−6.5, +3.3] | −0.1 [−3.5, +3.3] | +1.7 [−1.3, +4.7] | +21.7 [+15.5, +27.8] |
+| Nemotron-30B off the shelf | −3.1 [−9.2, +3.1] | −10.1 [−19.0, −2.9] | −0.9 [−5.6, +3.4] | +0.4 [−3.1, +4.2] | −7.6 [−13.7, −1.4] |
+| **Nemotron-30B + LoRA** | **+27.8 [+19.4, +35.8]** | −2.9 [−11.3, +4.6] | +5.3 [+1.5, +9.2] | +6.3 [+2.9, +10.0] | +25.4 [+17.7, +32.6] |
+| Claude Opus 5.5, 5-shot | +25.0 [+16.8, +33.1] | −1.4 [−8.3, +4.3] | +3.7 [+0.2, +7.4] | +5.7 [+2.7, +8.9] | +23.9 [+16.7, +31.2] |
+| Claude Opus 5.5, 20-shot | +25.7 [+17.5, +33.6] | −2.9 [−10.6, +3.2] | +3.6 [−0.0, +7.3] | +6.6 [+3.6, +10.0] | +24.3 [+17.1, +31.4] |
+| GPT-5.5, 5-shot | +10.8 [+4.0, +17.3] | −2.9 [−10.1, +3.2] | +3.3 [−0.6, +7.3] | +5.5 [+2.7, +8.6] | +8.3 [+2.9, +13.8] |
+| GPT-5.6 Terra, 5-shot | +6.6 [+0.3, +13.0] | −2.9 [−7.1, +0.0] | +0.4 [−3.9, +4.5] | +4.9 [+2.2, +7.8] | +4.0 [−1.5, +9.5] |
+| Router: LoRA v1 → Opus | +14.6 [+7.2, +21.9] | −2.9 [−7.5, +0.0] | −0.4 [−3.3, +2.8] | +2.1 [−1.1, +5.3] | +17.8 [+10.7, +24.9] |
 
 **How we decide a difference is real** (the two checks from the Fireworks sample project; a difference counts only if it passes both). *McNemar*: look only at the rows where exactly one of the two systems is fully right; under "equally good" that split is a coin flip, and the exact binomial p-value says how lopsided it is. *Cluster bootstrap*: resample whole **recordings** (159 in the test set — segments from one recording share a speaker, channel and airport, so they are not independent) with replacement 5,000 times and rescore both systems; the 95% interval of the gap must exclude zero.
 
-| Comparison vs Qwen3-8B off the shelf | Gap (full record) | Rows only this / only baseline right | McNemar p | Recording bootstrap 95% CI | Verdict |
+| Comparison | Gap (full record) | Rows only A / only B right | McNemar p | Recording bootstrap 95% CI | Verdict |
 |---|---|---|---|---|---|
-| Qwen3-8B + LoRA (ours) | +12.8 | 79 / 42 | 0.00098 | [+5.9, +19.7] | significant |
-| Claude Opus 5.5, 5-shot | +25.0 | 102 / 30 | 2.3e-10 | [+16.8, +33.1] | significant |
-| Claude Opus 5.5, 20-shot | +25.7 | 104 / 30 | 9.3e-11 | [+17.5, +33.6] | significant |
-| GPT-5.5, 5-shot | +10.8 | 59 / 28 | 0.0012 | [+4.0, +17.3] | significant |
-| GPT-5.6 Terra, 5-shot | +6.6 | 48 / 29 | 0.04 | [+0.3, +13.0] | significant |
-| Router: LoRA → Opus | +14.6 | 85 / 43 | 0.00026 | [+7.2, +21.9] | significant |
+| Qwen3-8B + LoRA v2 vs Qwen3-8B off the shelf | +17.4 | 76 / 26 | 7.4e-07 | [+10.5, +24.5] | significant |
+| Qwen3-8B + LoRA v1 vs Qwen3-8B off the shelf | +12.8 | 79 / 42 | 0.00098 | [+5.9, +19.7] | significant |
+| Qwen3-8B + LoRA v2 vs v1 | +4.5 | 44 / 31 | 0.17 | [−1.7, +10.8] | not significant |
+| Nemotron-30B + LoRA vs Nemotron-30B off the shelf | +30.9 | 106 / 17 | 6.6e-17 | [+23.8, +37.9] | significant |
+| **Nemotron-30B + LoRA vs Claude Opus 5.5** | **+2.8** | 27 / 19 | 0.30 | [−2.0, +7.4] | **tie** |
+| Qwen3-8B + LoRA v2 vs Claude Opus 5.5 | −7.6 | 22 / 44 | 0.0092 | [−13.9, −1.5] | significant (Opus ahead) |
+| Claude Opus 5.5 vs Qwen3-8B off the shelf | +25.0 | 102 / 30 | 2.3e-10 | [+16.8, +33.1] | significant |
+| Claude Opus 5.5, 20-shot vs 5-shot | +0.7 | 10 / 8 | 0.81 | [−2.2, +3.9] | not significant |
+| GPT-5.5 vs Qwen3-8B off the shelf | +10.8 | 59 / 28 | 0.0012 | [+4.0, +17.3] | significant |
+| GPT-5.6 Terra vs Qwen3-8B off the shelf | +6.6 | 48 / 29 | 0.04 | [+0.3, +13.0] | significant |
+| Router vs LoRA v1 alone | +1.7 | — | — | [−1.2, +4.5] | not significant |
 
-**What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm is within noise of every other (88–91%): all of them know what "cleared to land" means; what separates them is who said it and to whom.
+**What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.2, +3.9]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm except the un-tuned Nemotron is within noise of every other (88–91%): they all know what "cleared to land" means; what separates them is who said it and to whom.
 
 **Gains and regressions, not just the average** (`scripts/22_gains_regressions.py`; the NVIDIA enablement session's ask — which rows did the fine-tune fix, which did it break, and would a broken row change what the ledger does?). Base → LoRA on the 288 test rows: 80 right under both, 87 wrong under both, **79 fixed, 42 broken**. Severity is judged on the record the ledger ingests: *ledger-visible* = the runway-critical action set or the callsign set is wrong (the ledger would track the wrong aircraft or the wrong clearance); *role-only* = instruction vs read-back confused, aircraft and action right; *other action* = a non-runway action (contact, report, speed) missed or added.
 
@@ -103,20 +118,24 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 |---|---|---|---|---|---|
 | Gains — only the LoRA right | 79 | 30 | 13 | 63 | 3 |
 | Regressions — only the base right | 42 | 12 | 6 | 24 | 12 |
+| **Nemotron-30B: base → LoRA** — gains | 106 | 29 | 20 | 72 | 14 |
+| **Nemotron-30B: base → LoRA** — regressions | 17 | 5 | 1 | 16 | 0 |
+| Nemotron-30B LoRA vs Opus — rows only ours right | 27 | 3 | 9 | 11 | 7 |
+| Nemotron-30B LoRA vs Opus — rows only Opus right | 19 | 4 | 5 | 8 | 6 |
 
-Most of what the LoRA learned is *who is speaking* (63 of 79 gains); most of what it lost is non-runway actions it now under-reports (REPORT, SPEED — see the per-action chart) and 24 role flips the other way. The six ledger-visible regressions are the ones that matter operationally, and they are the kind a deterministic guard should catch: "*runway three one*" extracted as a callsign (twice), a CLEARED_TO_LAND hallucinated from "*five aircraft on runway zero six landing*", a CLEARED_TO_LAND dropped from a long read-back, and "*heavy*" dropped from a callsign. A callsign validator (airline + digits, or phonetic registration) in front of the ledger removes three of the six; it is deterministic code, not a model change, and we list it under what is next rather than claiming it.
+The first two rows are the Qwen3-8B dry-run adapter (the Nov 1 model); the Nemotron rows are the headline model. For Nemotron the LoRA fixes 106 rows and breaks 17, only one of them ledger-visible ("*runway six forty three*" read as a callsign); 16 of the 17 are role flips with the aircraft and action still right. Against Opus the disagreements split 27 / 19 with 9 vs 5 ledger-visible — the tie the significance table reports. For the 8B, most of what the LoRA learned is *who is speaking* (63 of 79 gains); most of what it lost is non-runway actions it now under-reports (REPORT, SPEED — see the per-action chart) and 24 role flips the other way. The six ledger-visible regressions are the ones that matter operationally, and they are the kind a deterministic guard should catch: "*runway three one*" extracted as a callsign (twice), a CLEARED_TO_LAND hallucinated from "*five aircraft on runway zero six landing*", a CLEARED_TO_LAND dropped from a long read-back, and "*heavy*" dropped from a callsign. A callsign validator (airline + digits, or phonetic registration) in front of the ledger removes three of the six; it is deterministic code, not a model change, and we list it under what is next rather than claiming it.
 
 ![Per-action recall on the test split](docs/per_action_recall.png)
 
-**Where our model still loses to Opus** (`scripts/16_error_analysis.py`, `scripts/20_figures.py recall`): role swaps (58 vs 42), and approach/radar-side instructions under-represented in tower-heavy training — APPROACH_CLEARANCE recall 64% vs 86%, SPEED 29% vs 100%, REPORT 57% vs 100%. On runway-critical rows the two are even (LoRA right alone on 4, Opus right alone on 6, both right on 40). 69 of 288 rows are wrong for both — the ceiling the gold's own noise sets.
+**Where the 8B still loses to Opus** (`scripts/16_error_analysis.py`, `scripts/20_figures.py recall`; dry-run adapter): role swaps (58 vs 42), and approach/radar-side instructions under-represented in tower-heavy training — APPROACH_CLEARANCE recall 64% vs 86%, SPEED 29% vs 100%, REPORT 57% vs 100%. On runway-critical rows the two are even (LoRA right alone on 4, Opus right alone on 6, both right on 40). 69 of 288 rows are wrong for both — the ceiling the gold's own noise sets.
 
 **What we tried that did not help** (all of it is in the tables above, as the Fireworks sample project asks): a router that sends the LoRA's empty / callsign-less / role-unknown outputs to Opus adds +1.7 points over the LoRA alone (56.9% vs 55.2%, Δ [−1.2, +4.5] — not significant) for 30× the cost, because the LoRA's failures are confident wrong answers, not abstentions; and 20-shot instead of 5-shot for Opus changes nothing (+0.7, not significant). Our worst experiment was the router: a good idea on paper that the paired test killed in one line.
 
-**Training.** LoRA rank 16, α 32, on the attention and MLP projections; one epoch over 5,600 examples (ATCO2 train gold ×3 with Opus-filled roles, pseudo-labelled UWB-ATCC / ATCOSIM validated as verbatim spans, synthetic US phraseology), lr 2e-4, batch 16, max 1,024 tokens, bf16 on the DGX Spark (2 h 05 min). The loss settles within the first tenth of the epoch; the v2 run (§7) is the same recipe with three epochs and the loss restricted to the response tokens.
+**Training.** Same recipe for every adapter: LoRA rank 16, α 32, on the attention and MLP projections, loss on the response tokens, lr 1e-4 (2e-4 for the Nov 1 dry run), max 2,048 tokens, on the 7,857-example v2 mix (ATCO2 train gold ×3 with Opus-filled roles, pseudo-labelled UWB-ATCC / ATCOSIM validated as verbatim spans, synthetic US phraseology; 3.64M tokens per epoch). Qwen3-8B v2: three epochs on Fireworks (`rtkwkax2`, 738 steps, ~1 h 50 min, eval loss on the dev split 1.51 → 0.138, $5.46). Nemotron-3-Nano-30B-A3B: one epoch on Fireworks (`g0tr55s3`, 246 steps, ~30 min, eval loss 0.745 → 0.118, $10.16). The Nov 1 dry run: one epoch, bf16 on the DGX Spark, 2 h 05 min, loss on all tokens. The loss settles within the first tenth of an epoch in every run; what the extra epochs and the larger model buy is the long tail (role on short read-backs, approach-side instructions).
 
 ![Training loss](docs/loss_curve.png)
 
-**Cost at tower scale** (10,000 transmissions/day per hub, list prices × measured tokens, ~520 US towers): Opus 5-shot ≈ **$99/day/airport, ≈ $18.8M/yr** nationally; the fine-tuned 8B hosted ≈ **$0.80/day, ≈ $150k/yr**; on a DGX Spark in the tower, ≈ $0 marginal — and only the last two can run without sending live tower audio off-site.
+**Cost at tower scale** (10,000 transmissions/day per hub, list prices × measured tokens, ~520 US towers): Opus 5-shot ≈ **$99/day/airport, ≈ $18.8M/yr** nationally; the fine-tuned 8B hosted ≈ **$0.90/day, ≈ $170k/yr**, the fine-tuned Nemotron-30B hosted ≈ **$2.20/day, ≈ $410k/yr**; on a DGX Spark in the tower, ≈ $0 marginal — and only the last two can run without sending live tower audio off-site.
 
 **Dry runs (dev split, 85 in-distribution rows — not the test set; `results/dev/`, for transparency).** On the training airports the same LoRA scores 71.8% and Opus 90.6%; both fall on the unseen, pilot-heavy test airports, Opus by more (−23 vs −17). Dev numbers were used only to choose the baseline and fix the scorer before any test run (`docs/preregistration.md`).
 
@@ -152,8 +171,8 @@ scripts/11_score_test.sh results/test/<baseline>.preds.jsonl results/test/*.pred
 
 ## 7. Sponsor tracks
 
-- **Fireworks.** Two supervised fine-tuning jobs on the same 7,857-example mix (`accounts/francolinjo-co18wqhx/datasets/atc-mix-v2`, 3.64M tokens; dev split as the evaluation set), launched during the build period from `scripts/15_fireworks_sft.py` (upload → SFT → on-demand deployment with addons → `lora.load`): **`rtkwkax2`** — Qwen3-8B, LoRA r16, 3 epochs, lr 1e-4, max ctx 2,048 (started 12:08 PT); **`g0tr55s3`** — Nemotron-3-Nano-30B-A3B, LoRA r16, 1 epoch (started 12:44 PT). Each is scored on the frozen test split through a temporary on-demand H100 deployment (`scripts/21_fw_v2_pipeline.sh`, `scripts/23_fw_nemotron_pipeline.sh`), torn down after scoring. Rows marked *Fireworks* in §4 come from these runs; if a row is missing, that job did not finish before the deadline and we say so rather than report a partial number. Fireworks serverless list prices are the hosted-cost column.
-- **NVIDIA.** Both open arms (off-the-shelf and fine-tuned) were trained and served on a DGX Spark (GB10) with vLLM — the on-prem "parser in the tower" configuration; pseudo-labels for the dry-run mix came from Nemotron-3-Nano-30B served locally on the same machine.
+- **Fireworks.** Three supervised fine-tuning jobs on the same 7,857-example mix (`accounts/francolinjo-co18wqhx/datasets/atc-mix-v2`, 3.64M tokens; dev split as the evaluation set), launched during the build period from `scripts/15_fireworks_sft.py` (upload → SFT → deploy): **`rtkwkax2`** Qwen3-8B, r16, 3 epochs ($5.46; scored through a temporary on-demand H100 deployment with LoRA addons, `scripts/21_fw_v2_pipeline.sh`, torn down after the run); **`g0tr55s3`** Nemotron-3-Nano-30B-A3B, r16, 1 epoch ($10.16; scored with Fireworks batch inference, `scripts/25_fw_batch_eval.py`, because this account has no on-demand configuration for that base); **`zdi4wg97`** Nemotron-3.5-Lightning-30B-A3B, r16, 1 epoch (launched 14:40 PT; its row appears in §4 only if it finished before the deadline). All test-split runs on Fireworks use the same prompt, shots and scorer as every other arm. Fireworks serverless list prices are the hosted-cost column; total spend on the account for everything above ≈ $30.
+- **NVIDIA.** The headline model is **Nemotron-3-Nano-30B-A3B**, fine-tuned the way the NVIDIA enablement session showed (base → few-shot → LoRA on one held-out set, gains and regressions inspected, cost in tokens and dollars) — and the same model served locally on the DGX Spark (NVFP4) was the teacher that pseudo-labelled the training mix. Both Qwen3-8B arms (off-the-shelf and the dry-run adapter) were trained and served on a DGX Spark (GB10) with vLLM — the on-prem "parser in the tower" configuration; the demo's live panel runs on the Spark.
 - **Microsoft.** Not entered.
 
 ## 8. Team

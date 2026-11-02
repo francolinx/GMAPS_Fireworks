@@ -88,3 +88,10 @@ Tower supervisors / ATC training programs; decision support only. Pilot via univ
 - Hard stop for new numbers: **15:05 PT**. If a job is not scored by then, the README keeps the dry-run row and §7 says the job did not finish; the deployment is deleted regardless (H100 on-demand bills $8/h).
 - After scores land: `scripts/11_score_test.sh` (baseline first) → `scripts/18_results_chart.py` → README §4 rows + headline → deck results slide → video segment 5 (`docs/video/`) → DISCLOSURE unchanged (build-period work) → push.
 - Spend: ≈ $6 so far (Qwen SFT), ≈ $11 Nemotron SFT, ≈ $3–6 for the two temporary deployments; the $50 credit covers it.
+
+## 15:05 PT — numbers are in (cloud session)
+
+- Qwen3-8B v2 (Fireworks, 3 epochs): 59.7 (+17.4 vs base, significant; −7.6 vs Opus, significant; +4.5 vs v1, n.s.). Hosted p50 0.70 s.
+- Nemotron-3-Nano-30B-A3B + LoRA (Fireworks, 1 epoch): **70.1 vs Opus 67.4 → tie** ([−2.0, +7.4], p = 0.30); +30.9 vs its own base. Reasoning-on first attempt (29.5 → 49.0) kept in the table; addendum 3.
+- Headline wording (CI straddles 0 → "matches"): "A fine-tuned open NVIDIA model matches Claude Opus 5.5 on real tower radio (70.1% vs 67.4%, paired 95% CI [−2.0, +7.4]) at ~1/45th the cost — and it can run inside the tower."
+- Lightning 3.5 job `zdi4wg97` + base batch eval running; add the row if it lands before 16:15, else §7 says so.

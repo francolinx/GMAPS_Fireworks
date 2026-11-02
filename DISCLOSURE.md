@@ -62,3 +62,12 @@ responsible for the implementation and the reported results.
 | Scorer rule | `bench/normalize.py`, `bench/score.py` | ACK/OTHER excluded from action sets; guard rules; fixed before any test run |
 | Fireworks route | `scripts/15_fireworks_sft.py` | dataset upload / SFT / status / deploy via the Python SDK |
 | Docs | `scripts/14_results_md.py`, `docs/video_script.md`, `viz/export_transmissions.py`, `viz/import_outputs.py` | results tables generator, video script, viz wiring |
+
+### Build period, Nov 2, 10:30–16:30 PT (all new work; listed for completeness)
+
+| Item | Where | Notes |
+|---|---|---|
+| Frozen-test runs of all arms | `results/test/*.preds.jsonl`, `scores.*` | first test-set use 10:53 PT; every arm with the same prompt/shots/scorer |
+| Fireworks SFT jobs `rtkwkax2`, `g0tr55s3`, `zdi4wg97` and their evals | `scripts/15_fireworks_sft.py`, `21_*`, `23_*`, `25_*` | launched 12:08, 12:44, 14:40 PT |
+| Significance testing (McNemar + recording bootstrap), gains/regressions, figures | `bench/score.py`, `scripts/20_*`, `22_*` | after the Fireworks and NVIDIA sessions; prereg addenda 2–3 |
+| README §4, deck, video re-cut, Spark work package 2 (`SPARK_PROMPT_2.md`) | — | written during the build period with Claude (cloud session) |
