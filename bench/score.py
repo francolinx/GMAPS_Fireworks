@@ -39,13 +39,17 @@ def parse_output(raw):
         return d if isinstance(d, dict) else None
     except Exception:
         pass
-    m = re.search(r"\{.*\}", s, re.S)
-    if m:
-        try:
-            d = json.loads(m.group(0))
-            return d if isinstance(d, dict) else None
-        except Exception:
-            return None
+    # greedy first (handles a single object with trailing prose), then the first non-nested object
+    # (handles models that append a second object or commentary with braces). The schema has no nested objects.
+    for pat in (r"\{.*\}", r"\{.*?\}"):
+        m = re.search(pat, s, re.S)
+        if m:
+            try:
+                d = json.loads(m.group(0))
+                if isinstance(d, dict):
+                    return d
+            except Exception:
+                pass
     return None
 
 
