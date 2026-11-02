@@ -104,3 +104,33 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
   - `docs/video/lga_04_gmaps_2x.mp4` (75 s): the alert fires at 23:37:04, and the clip freezes there with the caption. Known flaw: at the freeze, JAZZ 646 (4,400 ft out) is underneath the caption box. Fixed in the package-4 re-record.
 - **Live parser latencies (Qwen3-8B + LoRA, :8001, 0-shot, during the 1× recordings): 2.0–3.7 s per call**, median about 2.8 s (13 calls).
 - **Not done in this pass:** the stills (made in the package-4 re-record, same layout).
+
+## Package 4 (Nov 2 pm)
+- **Done:** `viz/index.html` is now the package-4 monitor. The previous page is kept as `viz/index_sfo.html`, which is the one the SFO clips use.
+  - Speaker badges with one colour each: LGA TOWER cyan, JAZZ 646 white, TRUCK 1 amber. They are used on the cards, the map labels, the NOW ON FREQUENCY strip (speaker, words, wording tag, wall clock; held about 4 s of scenario time and animated in) and the log.
+  - Input → output transcript cards. OUTPUT is the **live** parser result from :8001, with ✓/✗ per field against the scripted record, latency and tokens, and a plain-language why line: green = matches; amber = differs but the same ledger record; red = differs in a way the ledger would see.
+  - The ledger's own WHY on the alert: "RWY 4: landing clearance JAZZ 646 active (short final, 20 s to D) + crossing clearance TRUCK 1 at D (18 s to runway) → overlap → ALERT (JO 7110.65 3-1-3, 3-7-2)".
+  - A large wall clock (EDT).
+  - The who-stepped-in timeline, 23:35:00–23:37:30, with fixed markers and one marker per arm from `viz/lga/stepped_in.json`, plus a KEY with clock times and "x s before the truck entered" or "never alerted".
+  - Cost, speed and accuracy cards (3 s each) after the freeze, then the memorial card. Accuracy uses the 3-epoch rows: Nemotron-30B LoRA 69.8%, tie with Opus p = 0.41 (1 epoch 70.1%, p = 0.30).
+  - `?view=log` and `?view=spark`. The Spark view shows a 1 s GPU-utilisation sparkline, :8001/:8002/:8004 up lights, per-call latency bars and a token count; `&load=1` sends the eight LGA lines through all three endpoints.
+- **Look-ahead fix:** the look-ahead panel is now hidden until both clearances are in the ledger. In eb5b676's GMAPS clip it showed "~20 s / ~18 s / overlap" from t=0. Re-recorded in 037ff79 and again with the package-4 page.
+- **Pushed:** `docs/video/lga_04_asis_2x.mp4` (93 s), `docs/video/lga_04_gmaps_2x.mp4` (84 s), `docs/video/lga_spark_panel_2x.mp4` (15 s, under load), and stills `docs/runway_monitor_lga_04_{asis,gmaps}.png`, `docs/runway_monitor_lga_log.png`, `docs/runway_monitor_lga_spark.png` (1920×1200). The two LGA clips were recorded at 1× and sped up 2× with ffmpeg setpts.
+- **Per-arm alert_t** (`viz/lga/stepped_in.py`, real outputs on the eight LGA lines). The three Spark arms were added here: `atc-qwen3-8b` :8001 0-shot; `qwen3-8b-base` on **:8004** (not :8003, which is `rescuebase-whisper`), 5-shot from train, enable_thinking false; and `nemotron-lightning-3.5-30b-spark-base` :8002 NVFP4, 5-shot, reasoning_effort none.
+```
+    arm                                      alert_t  clock     vs controller  vs truck on runway
+    atc-nemotron-lightning-30b-v1            124      23:37:04  8              18
+    atc-nemotron-nano-30b-v1                 124      23:37:04  8              18
+    atc-qwen3-8b                             124      23:37:04  8              18
+    nemotron-lightning-3.5-30b-spark-base    None     None      None           None
+    nemotron-lightning-30b-base              124      23:37:04  8              18
+    nemotron-nano-30b-base                   124      23:37:04  8              18
+    qwen3-8b-base                            None     None      None           None
+    controller first stop                    132      23:37:12
+    Truck 1 enters runway 4                  142      23:37:22
+```
+  Both Spark base arms tag the 23:37:04 crossing clearance as **PILOT**. The rule only takes ATCO clearances, so it never fires. This was stable at temperature 0 over three runs for Lightning. The *hosted* Lightning base (Fireworks) tags the same line ATCO and alerts at t=124, so the two Lightning base rows disagree. Both are shown. All three LoRA arms and both hosted base arms alert at 23:37:04, 8 s before the first "stop" and 18 s before Truck 1 entered runway 4.
+- **Measured latency / utilisation:** live LoRA parser in the clips 2.0–3.7 s per call (13 calls) and 2.0–3.5 s in the log view (8 calls), median about 2.8 s. Under the three-endpoint load test (24 calls running at once), per-call latency rises to 2.5–10.8 s from GPU contention. Lightning NVFP4 stays at about 2.5–3.9 s. GPU utilisation goes from about 2% idle to **96%** for the whole load and back.
+- **Memory:** to fit three servers, Lightning was restarted at GPU_UTIL 0.33 (was 0.55), the student is at 0.25 and the base Qwen at 0.2. About 95 GiB is in GPU processes.
+- **Not done / caveats:** the 1920×1200 GMAPS still caught the t=124 card before its live result arrived (the clip shows it). The per-arm markers at t=124 stack closely on the timeline bar; the KEY lists them all.
+- **Left running:** `vllm-student` :8001, `vllm-nemotron-lightning-3.5-30b` :8002, `vllm-qwen3-8b-base` :8004, `viz/live_server.py` :8090.
