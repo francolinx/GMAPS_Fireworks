@@ -35,6 +35,8 @@ LABELS = {  # model name → display name; the shot count is appended from the p
     "nemotron-nano-30b-base_fwbatch_fs5": "Nemotron-30B off the shelf, reasoning on (1,500-token cap hit)",
     "atc-nemotron-nano-30b-v1_fwbatch_fs0": "Nemotron-30B + LoRA, reasoning on (first attempt)",
     "nemotron-nano-30b-base_fwbatch-nothink_fs5": "Nemotron-3-Nano-30B-A3B off the shelf (Fireworks)",
+    "nemotron-lightning-30b-base_fwbatch-nothink_fs5": "Nemotron-3.5-Lightning-30B-A3B off the shelf (Fireworks)",
+    "atc-nemotron-lightning-30b-v1_fwbatch-nothink_fs0": "Nemotron-3.5-Lightning-30B-A3B + our LoRA (Fireworks SFT)",
     "atc-nemotron-nano-30b-v1_fwbatch-nothink_fs0": "Nemotron-3-Nano-30B-A3B + our LoRA (Fireworks SFT)",
 }
 import re

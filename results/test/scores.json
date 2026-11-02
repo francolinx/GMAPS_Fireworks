@@ -446,6 +446,204 @@
     }
   },
   {
+    "model": "accounts/fireworks/models/nemotron-lightning-3p5-30b-a3b",
+    "file": "nemotron-lightning-30b-base_fwbatch-nothink_fs5.preds.jsonl",
+    "n": 288,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.8814229249011858,
+    "command_span_f1": 0.56957928802589,
+    "value_f1": 0.501628664495114,
+    "action_f1": 0.9246861924686193,
+    "action_exact": 0.8784722222222222,
+    "runway_critical_n": 69,
+    "runway_critical_exact": 0.927536231884058,
+    "runway_critical_f1": 0.9290322580645162,
+    "role_acc": 0.5144927536231884,
+    "full_record_exact": 0.40625,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "latency_mean_ms": null,
+    "prompt_tokens": 245173,
+    "completion_tokens": 11939,
+    "cost_usd_total": 0.128556,
+    "cost_usd_per_1k_segments": 0.446375,
+    "mcnemar_vs_first": {
+      "only_arm_right": 44,
+      "only_first_right": 49,
+      "p": 0.6785320136533252
+    },
+    "ci95": {
+      "callsign_f1": [
+        0.8373983739837398,
+        0.9206349206349206
+      ],
+      "action_f1": [
+        0.8977777777777778,
+        0.949367088607595
+      ],
+      "action_exact": [
+        0.8362989323843416,
+        0.9186440677966101
+      ],
+      "runway_critical_exact": [
+        0.8461538461538461,
+        0.9866666666666667
+      ],
+      "role_acc": [
+        0.46691176470588236,
+        0.5611510791366906
+      ],
+      "full_record_exact": [
+        0.36101083032490977,
+        0.45263157894736844
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": 0.004499847978108984,
+        "ci95": [
+          -0.026987933168316824,
+          0.03588438411621109
+        ]
+      },
+      "action_f1": {
+        "delta": 0.04942192185551142,
+        "ci95": [
+          0.017675651789659796,
+          0.08330738460801468
+        ]
+      },
+      "action_exact": {
+        "delta": 0.03819444444444442,
+        "ci95": [
+          -0.0033670033670033517,
+          0.07942238267148016
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.01449275362318847,
+        "ci95": [
+          -0.0641025641025641,
+          0.08602150537634412
+        ]
+      },
+      "role_acc": {
+        "delta": -0.061594202898550776,
+        "ci95": [
+          -0.1208791208791209,
+          -0.0034364261168384758
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.017361111111111105,
+        "ci95": [
+          -0.07954545454545453,
+          0.04642857142857143
+        ]
+      }
+    }
+  },
+  {
+    "model": "accounts/francolinjo-co18wqhx/models/atc-nemotron-lightning-30b-v1",
+    "file": "atc-nemotron-lightning-30b-v1_fwbatch-nothink_fs0.preds.jsonl",
+    "n": 288,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9017341040462429,
+    "command_span_f1": 0.6962699822380106,
+    "value_f1": 0.5965996908809893,
+    "action_f1": 0.9175475687103594,
+    "action_exact": 0.8854166666666666,
+    "runway_critical_n": 69,
+    "runway_critical_exact": 0.9420289855072463,
+    "runway_critical_f1": 0.935897435897436,
+    "role_acc": 0.7572463768115942,
+    "full_record_exact": 0.6041666666666666,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "latency_mean_ms": null,
+    "prompt_tokens": 113845,
+    "completion_tokens": 11817,
+    "cost_usd_total": 0.062831,
+    "cost_usd_per_1k_segments": 0.21816319444444443,
+    "mcnemar_vs_first": {
+      "only_arm_right": 75,
+      "only_first_right": 23,
+      "p": 1.3172242120654852e-07
+    },
+    "ci95": {
+      "callsign_f1": [
+        0.8646616541353384,
+        0.9357429718875502
+      ],
+      "action_f1": [
+        0.8867924528301887,
+        0.9456740442655936
+      ],
+      "action_exact": [
+        0.8458781362007168,
+        0.9222972972972973
+      ],
+      "runway_critical_exact": [
+        0.88,
+        0.9871794871794872
+      ],
+      "role_acc": [
+        0.7056737588652482,
+        0.8079710144927537
+      ],
+      "full_record_exact": [
+        0.5498281786941581,
+        0.660958904109589
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": 0.024811027123166074,
+        "ci95": [
+          -0.012827463784704118,
+          0.06366485238330866
+        ]
+      },
+      "action_f1": {
+        "delta": 0.04228329809725151,
+        "ci95": [
+          0.0043290043290042934,
+          0.08151422418678456
+        ]
+      },
+      "action_exact": {
+        "delta": 0.04513888888888884,
+        "ci95": [
+          0.003389830508474523,
+          0.08791208791208793
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.02898550724637683,
+        "ci95": [
+          -0.024390243902439046,
+          0.09090909090909094
+        ]
+      },
+      "role_acc": {
+        "delta": 0.1811594202898551,
+        "ci95": [
+          0.11985018726591756,
+          0.24175824175824168
+        ]
+      },
+      "full_record_exact": {
+        "delta": 0.18055555555555552,
+        "ci95": [
+          0.11224489795918369,
+          0.25
+        ]
+      }
+    }
+  },
+  {
     "model": "anthropic/claude-opus-5.5",
     "file": "anthropic_claude-opus-5.5_fs5.preds.jsonl",
     "n": 288,
