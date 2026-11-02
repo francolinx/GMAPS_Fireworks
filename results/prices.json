@@ -58,5 +58,15 @@
     "in": 0.2,
     "out": 0.2,
     "_note": "Fireworks-hosted LoRA on qwen3-8b; priced at the serverless 4-16B tier list price (the on-demand H100 deployment used for the test run bills per GPU-hour instead)"
+  },
+  "accounts/fireworks/models/nemotron-nano-3-30b-a3b#accounts/francolinjo-co18wqhx/deployments/atc-nemo": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "Nemotron-3-Nano-30B-A3B: Fireworks serverless MoE 0-56B tier list price; the on-demand deployment used for the run bills per GPU-hour"
+  },
+  "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v1#accounts/francolinjo-co18wqhx/deployments/atc-nemo": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "our LoRA on Nemotron-3-Nano-30B-A3B, priced at the same tier"
   }
 }

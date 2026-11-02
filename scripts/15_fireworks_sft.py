@@ -130,10 +130,13 @@ def cmd_deploy_ondemand(args):
         print("deployment exists:", d.name, getattr(d, "state", ""))
     except Exception:
         print(f"creating on-demand deployment {dep_id}: base={args.base} {args.accelerator} x{args.count} precision={args.precision}")
+        extra = {"accelerator_count": args.count} if args.count > 0 else {}   # 0 → let Fireworks size it
+        if args.precision != "default":
+            extra["precision"] = args.precision
         d = c.deployments.create(account_id=aid, deployment_id=dep_id, base_model=args.base, display_name=dep_id,
-                                 enable_addons=True, accelerator_type=args.accelerator, accelerator_count=args.count,
-                                 min_replica_count=1, max_replica_count=1, precision=args.precision,
-                                 description="GMAPS frozen-test eval of the ATC LoRA (temporary)")
+                                 enable_addons=True, accelerator_type=args.accelerator,
+                                 min_replica_count=1, max_replica_count=1,
+                                 description="GMAPS frozen-test eval of the ATC LoRA (temporary)", **extra)
         print("created:", d.name)
     for _ in range(120):
         d = c.deployments.get(deployment_id=dep_id, account_id=aid)
