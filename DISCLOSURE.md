@@ -38,3 +38,12 @@ reuses *[state exactly which components, if any]*; the scenario viewer in `viz/`
 
 AI assistance: Claude (Anthropic) was used to scaffold this repository and during the build; the team is
 responsible for the implementation and the reported results.
+
+### Added Nov 2, 07:45–08:30 PT (before check-in, from the cloud session)
+| Area | Files | What it is |
+|---|---|---|
+| Scorer CIs | `bench/score.py` | row-bootstrap 95% CIs and paired deltas vs the first arm |
+| Defaults | `bench/infer.py` | `--split` defaults to dev; few-shot pool is the train split |
+| Test runner | `scripts/10_eval_test.sh`, `scripts/11_score_test.sh` | hash-checked frozen-test run and joint scoring — written before 10:30, **first executed during the build period** |
+| Prices | `results/prices.json` | list prices (OpenAI, Fireworks) as of 2026-11-02 |
+| README | `README.md`, `docs/runway_monitor_sfo_28l.png` | narrative, metric framing, business math template, screenshot of the dry-run viewer |

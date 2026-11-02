@@ -1,4 +1,12 @@
 {
-  "gpt-5": {"in": 0, "out": 0},
-  "accounts/fireworks/models/qwen3-8b": {"in": 0, "out": 0}
+  "_note": "USD per 1M tokens, list prices as of 2026-11-02. Keys must equal the --model string used in bench/infer.py. Sources: openai.com/api/pricing (via morphllm.com/openai-api-pricing, 2026-10-31), docs.fireworks.ai/serverless/pricing (4B-16B tier $0.20/$0.20; <4B $0.10/$0.10; LoRA SFT <=16B $0.50 per 1M training tokens).",
+  "gpt-5": {"in": 1.25, "out": 10.00},
+  "gpt-5-mini": {"in": 0.25, "out": 2.00},
+  "gpt-5.5": {"in": 5.00, "out": 30.00},
+  "accounts/fireworks/models/qwen3-8b": {"in": 0.20, "out": 0.20},
+  "accounts/fireworks/models/qwen3-4b": {"in": 0.20, "out": 0.20},
+  "accounts/fireworks/models/llama-v3p1-8b-instruct": {"in": 0.20, "out": 0.20},
+  "FILL_ME_fireworks_lora_deployment_name": {"in": 0.20, "out": 0.20},
+  "atc-qwen3-8b": {"in": 0.0, "out": 0.0, "_note": "on-prem DGX Spark; marginal token cost ~0, hardware amortised separately"},
+  "qwen3-8b-base": {"in": 0.0, "out": 0.0, "_note": "on-prem DGX Spark dry run"}
 }
