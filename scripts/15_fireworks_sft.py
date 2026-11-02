@@ -128,6 +128,10 @@ def cmd_deploy_ondemand(args):
     try:
         d = c.deployments.get(deployment_id=dep_id, account_id=aid)
         print("deployment exists:", d.name, getattr(d, "state", ""))
+        if "DELETED" in str(getattr(d, "state", "")).upper():
+            sys.exit(f"deployment id {dep_id} is a deleted deployment — pick a fresh --deployment-id")
+    except SystemExit:
+        raise
     except Exception:
         print(f"creating on-demand deployment {dep_id}: base={args.base} {args.accelerator} x{args.count} precision={args.precision}")
         extra = {"accelerator_count": args.count} if args.count > 0 else {}   # 0 → let Fireworks size it

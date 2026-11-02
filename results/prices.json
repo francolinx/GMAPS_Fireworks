@@ -68,5 +68,15 @@
     "in": 0.5,
     "out": 0.5,
     "_note": "our LoRA on Nemotron-3-Nano-30B-A3B, priced at the same tier"
+  },
+  "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v1": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "our LoRA on Nemotron-3-Nano-30B-A3B, scored via Fireworks batch inference; priced at the serverless MoE 0-56B tier list price (batch is billed at 50% of it)"
+  },
+  "accounts/fireworks/models/nemotron-nano-3-30b-a3b": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "Nemotron-3-Nano-30B-A3B off the shelf, scored via Fireworks batch inference; serverless MoE 0-56B tier list price"
   }
 }

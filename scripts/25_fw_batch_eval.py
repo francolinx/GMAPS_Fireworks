@@ -81,7 +81,7 @@ def cmd_collect(a):
     if "COMPLETED" not in st.upper():
         sys.exit("batch job did not complete")
     H = {"Authorization": f"Bearer {os.environ['FIREWORKS_API_KEY']}"}
-    r = requests.post(f"https://api.fireworks.ai/v1/accounts/{AID}/datasets/{m['out']}:getDownloadEndpoint", headers=H, json={}, timeout=60)
+    r = requests.get(f"https://api.fireworks.ai/v1/accounts/{AID}/datasets/{m['out']}:getDownloadEndpoint", headers=H, timeout=60)
     print("download endpoint:", r.status_code, r.text[:300])
     urls = r.json().get("filenameToSignedUrls", {})
     out = f"results/test/{a.tag}_fs{m['fewshot']}.preds.jsonl"
