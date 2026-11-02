@@ -16,3 +16,4 @@ results/env_check.txt
 viz/ksfo_overpass_raw.json
 .venv/
 runs_phase2.sh
+logs/
