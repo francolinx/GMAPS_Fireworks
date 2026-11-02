@@ -2,11 +2,9 @@
 
 **Fireworks: Deploy buildathon with Microsoft & NVIDIA · Nov 2, 2026 · San Francisco**
 
-> **Status: pre-event draft.** Every number under *Results* is filled in during the build period from `results/test/`. Delete this line before submitting.
-
 ![GMAPS runway monitor — KSFO 28L, SIM212 cleared to land, RESCUE7 cleared to cross at E](docs/runway_monitor_sfo_28l.png)
 
-**One sentence.** A fine-tuned 8B open model parses real air-traffic-control radio into the structured record a runway-conflict engine needs, at **[N]% clearance-state accuracy on 288 real transmissions from three airports it never saw, vs [M]% for [frontier model]**, at 1/[K] the per-transmission cost — and the same adapter runs in the tower on a DGX Spark with no internet.
+**One sentence.** On 288 real tower transmissions from three airports it never saw, a LoRA on Qwen3-8B lifts full-record accuracy from **42.4% to 55.2% (+12.8, 95% CI [+5.2, +20.1])** and reaches 82% of Claude Opus 5.5's score at ~1/100th the per-transmission cost — on a model that can run inside the tower on a DGX Spark with no internet.
 
 ## 1. Project overview
 
@@ -55,25 +53,43 @@
 
 ## 4. Results
 
-*Produced by `scripts/11_score_test.sh <baseline> <arms…>` from `results/test/`; all four frontier reference arms were run 10:53–12:05 PT on Nov 2.*
+![Before → after on the frozen test split](docs/results_full_record.png)
 
-**What the frontier models do on unseen airports.** Claude Opus 5.5 at 5-shot scores 67.4% full-record exact (95% CI [61.5, 72.6]); giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7, CI [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — and it is exactly the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) the frontier models are strong (88–90%): they know what "cleared to land" means; what they get wrong is who said it.
+**Before → after (the graded comparison).** Qwen3-8B off the shelf, 5-shot: **42.4%** full-record exact. The same model with our LoRA, 0-shot: **55.2%** — **+12.8 points, paired 95% CI [+5.2, +20.1]**, on 288 real transmissions from three airports it never saw. Role accuracy +17.4 points [+9.4, +25.0]. Clearance-state accuracy is unchanged within noise (88.4% vs 91.3%, Δ −2.9 [−7.5, 0.0]): the fine-tune's gain is in knowing *who* is speaking and *which aircraft*, not in reading the clearance words, which the base already does. This row is the **Nov 1 dry-run adapter** (1 epoch, loss on prompt tokens, 30B-teacher labels, `STATUS.md`); the v2 training run described in §7 is the submitted model if it finished in time — see the row marked v2 below, or its absence.
 
-| Arm | Where it ran | Clearance-state acc (n=70) | Full record exact (n=288) | Action F1 | Callsign F1 | Role acc | JSON valid | p50 / p95 ms | $/1k |
-|---|---|---|---|---|---|---|---|---|---|
-| [frontier], 5-shot | API | | | | | | | | |
-| [frontier], 20-shot | API | | | | | | | | |
-| Qwen3-8B base, 5-shot | Fireworks serverless | | | | | | | | |
-| **Qwen3-8B + LoRA (ours), 0-shot** | **Fireworks serverless** | | | | | | | | |
-| Qwen3-8B + LoRA (ours), 0-shot | DGX Spark, on-prem | | | | | | | | ~0 |
-| Nemotron-Nano-8B + LoRA (ours), 0-shot | DGX Spark, on-prem | | | | | | | | ~0 |
-| Router: LoRA → frontier on low confidence | mixed | | | | | | | | |
+**Reference — the strongest closed model.** Claude Opus 5.5, 5-shot: 67.4% [61.5, 72.6]. We are **12.2 points behind it** on full record (paired Δ −12.2 [−18.1, −5.9]) and tied on clearance-state accuracy (88.4% vs 89.9%, Δ −1.4 [−7.7, +4.9]), at roughly **1/100th the per-transmission cost** on hosted inference and zero marginal cost on the Spark in the tower.
 
-**Paired deltas with 95% CIs** (fine-tune − frontier, same rows): *table from `results/test/scores.md`*.
+All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `results/test/scores.md`):
 
-**Cost at tower scale** (10,000 transmissions/day, list prices, measured token counts): frontier 5-shot ≈ $[x]/day/airport; fine-tuned 0-shot ≈ $[y]/day; across the ~520 FAA and contract towers in the US that is $[X]/yr vs $[Y]/yr — and only one of the two can run inside the tower at all.
+| Arm | Where it ran | Clearance-state acc (n=69) | Full record exact (n=288) | Action F1 | Callsign F1 | Role acc | p50 / p95 | $/1k transmissions |
+|---|---|---|---|---|---|---|---|---|
+| **Qwen3-8B off the shelf, 5-shot (baseline)** | DGX Spark, bf16, vLLM | 91.3% | **42.4%** | 87.5% | 87.7% | 57.6% | 2.9 s / 3.9 s | $0.20 hosted¹ / ~0 on-prem |
+| **Qwen3-8B + LoRA (ours, dry-run adapter), 0-shot** | DGX Spark, bf16, vLLM | 88.4% | **55.2%** | 85.8% | 89.0% | 75.0% | 3.0 s / 4.1 s | $0.08 hosted¹ / ~0 on-prem |
+| Router: LoRA → Opus when the LoRA output is empty / has no callsign / role unknown | mixed | 88.4% | 56.9% | 87.1% | 89.8% | 75.4% | 3.3 s / 8.4 s | $2.46 |
+| Claude Opus 5.5, 5-shot | API via OpenRouter | 89.9% | 67.4% | 91.2% | 93.4% | 81.5% | 5.3 s / 7.2 s | $9.92 |
+| Claude Opus 5.5, 20-shot (fairness check) | API via OpenRouter | 88.4% | 68.1% | 91.1% | 94.3% | 81.9% | 3.8 s / 6.1 s | $14.48 |
+| GPT-5.5, 5-shot | API via OpenRouter | 88.4% | 53.1% | 90.9% | 93.2% | 65.9% | 3.7 s / 8.8 s | $10.40 |
+| GPT-5.6 Terra, 5-shot | API via OpenRouter | 88.4% | 49.0% | 87.9% | 92.5% | 61.6% | 2.4 s / 3.7 s | $2.62 |
 
-**Dry runs (dev split, 85 in-distribution rows — not the test set; `results/dev/`, reported for transparency only).** Nov 1 on the Spark: the 1-epoch LoRA lifted full-record exact from 42.4% to 70.6% over the prompted base (scored under the earlier rule that still counted ACK). Nov 2, 08:00 PT, frontier models at 5-shot under the final rule: Claude Opus 5.5 **90.6%**, GPT-5.5 83.5%, GPT-5.6 Terra 71.8%; Opus at 20-shot 87.1%. These set the bar the test run has to meet.
+¹ Fireworks serverless list price for the 4–16B tier ($0.20/M tokens in and out) × the measured token counts (≈1,000 prompt tokens at 5-shot, ≈400 at 0-shot). Latency for the Spark arms is localhost on a GB10 (bandwidth-bound in bf16); for the API arms it is from the same cloud VM through OpenRouter.
+
+**Paired deltas vs the off-the-shelf baseline, 95% CI** (`results/test/scores.md`):
+
+| Arm | Full record | Clearance-state | Action F1 | Callsign F1 | Role |
+|---|---|---|---|---|---|
+| Qwen3-8B + LoRA (ours) | +12.8 [+5.2, +20.1] | -2.9 [-7.5, +0.0] | -1.7 [-4.7, +1.2] | +1.3 [-1.4, +4.3] | +17.4 [+9.4, +25.0] |
+| Claude Opus 5.5, 5-shot | +25.0 [+17.7, +32.3] | -1.4 [-6.8, +3.2] | +3.7 [+0.3, +7.2] | +5.7 [+2.5, +8.9] | +23.9 [+16.7, +30.9] |
+| Claude Opus 5.5, 20-shot | +25.7 [+18.4, +33.0] | -2.9 [-9.1, +2.8] | +3.6 [+0.4, +7.1] | +6.6 [+3.4, +10.1] | +24.3 [+16.9, +31.4] |
+| GPT-5.5, 5-shot | +10.8 [+4.5, +17.4] | -2.9 [-8.9, +2.9] | +3.3 [-0.2, +7.0] | +5.5 [+2.5, +8.6] | +8.3 [+2.5, +14.4] |
+| GPT-5.6 Terra, 5-shot | +6.6 [+0.7, +12.5] | -2.9 [-7.4, +0.0] | +0.4 [-3.5, +4.4] | +4.9 [+2.0, +7.8] | +4.0 [-2.2, +10.3] |
+
+**What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm is within noise of every other (88–91%): all of them know what "cleared to land" means; what separates them is who said it and to whom.
+
+**Where our model still loses to Opus** (`scripts/16_error_analysis.py`): role swaps (58 vs 42), and approach/radar-side instructions under-represented in tower-heavy training — APPROACH_CLEARANCE recall 64% vs 86%, SPEED 29% vs 100%, REPORT 57% vs 100%. On runway-critical rows the two are even (LoRA right alone on 4, Opus right alone on 6, both right on 40). 69 of 288 rows are wrong for both — the ceiling the gold's own noise sets.
+
+**Cost at tower scale** (10,000 transmissions/day per hub, list prices × measured tokens, ~520 US towers): Opus 5-shot ≈ **$99/day/airport, ≈ $18.8M/yr** nationally; the fine-tuned 8B hosted ≈ **$0.80/day, ≈ $150k/yr**; on a DGX Spark in the tower, ≈ $0 marginal — and only the last two can run without sending live tower audio off-site.
+
+**Dry runs (dev split, 85 in-distribution rows — not the test set; `results/dev/`, for transparency).** On the training airports the same LoRA scores 71.8% and Opus 90.6%; both fall on the unseen, pilot-heavy test airports, Opus by more (−23 vs −17). Dev numbers were used only to choose the baseline and fix the scorer before any test run (`docs/preregistration.md`).
 
 ## 5. Tradeoffs and limitations
 
