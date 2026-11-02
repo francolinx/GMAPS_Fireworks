@@ -17,3 +17,4 @@ viz/ksfo_overpass_raw.json
 .venv/
 runs_phase2.sh
 logs/
+results/test/*.batchjob.json

@@ -139,7 +139,7 @@ def cmd_deploy_ondemand(args):
             extra["accept_shapeless_risk"] = True           # explicit accelerator choice, no shape validation
         d = c.deployments.create(account_id=aid, deployment_id=dep_id, base_model=args.base, display_name=dep_id,
                                  enable_addons=True, accelerator_type=args.accelerator,
-                                 min_replica_count=1, max_replica_count=1,
+                                 min_replica_count=1, max_replica_count=1, disable_speculative_decoding=True,  # the default FP8 draft model is incompatible with addons
                                  description="GMAPS frozen-test eval of the ATC LoRA (temporary)", **extra)
         print("created:", d.name)
     for _ in range(120):
