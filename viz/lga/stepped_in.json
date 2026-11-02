@@ -27,6 +27,31 @@
    "truck one and company"
   ]
  },
+ "atc-qwen3-8b": {
+  "alert_t": 124,
+  "clock": "23:37:04",
+  "lead_over_controller_s": 8,
+  "lead_over_truck_s": 18,
+  "landing_seen": [
+   7,
+   "jazz six four six"
+  ],
+  "crossing_seen": [
+   124,
+   "truck one and company"
+  ]
+ },
+ "nemotron-lightning-3.5-30b-spark-base": {
+  "alert_t": null,
+  "clock": null,
+  "lead_over_controller_s": null,
+  "lead_over_truck_s": null,
+  "landing_seen": [
+   7,
+   "jazz six four six"
+  ],
+  "crossing_seen": null
+ },
  "nemotron-lightning-30b-base": {
   "alert_t": 124,
   "clock": "23:37:04",
@@ -54,5 +79,16 @@
    124,
    "truck one and company"
   ]
+ },
+ "qwen3-8b-base": {
+  "alert_t": null,
+  "clock": null,
+  "lead_over_controller_s": null,
+  "lead_over_truck_s": null,
+  "landing_seen": [
+   7,
+   "jazz six four six"
+  ],
+  "crossing_seen": null
  }
 }
