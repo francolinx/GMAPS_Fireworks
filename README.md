@@ -66,6 +66,7 @@
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks) | 60.4% | 94.2% | +18.1, significant | $0.06 |
 | Qwen3-8B + LoRA v2 (3 epochs, Fireworks) | 59.7% | 89.9% | +17.4, significant | $0.02 |
 | Router: LoRA v1 → Opus on weak outputs | 56.9% | 88.4% | +14.6, significant | — |
+| GPT-6.1 Terra Pro, 5-shot | 56.2% | 89.9% | +13.9, significant | $1.44 |
 | Qwen3-8B + LoRA v1 (1 epoch, DGX Spark) | 55.2% | 88.4% | +12.8, significant | ~$0 (on-prem) |
 | GPT-5.5, 5-shot | 53.1% | 88.4% | +10.8, significant | $3.00 |
 | GPT-5.6 Terra, 5-shot | 49.0% | 88.4% | +6.6, significant | $0.76 |
@@ -92,6 +93,7 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | Nemotron-3.5-Lightning-30B-A3B off the shelf, 5-shot | Fireworks batch | **92.8%** | 40.6% | 92.5% | 88.1% | 51.4% | — ³ | $0.45 |
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks SFT `zdi4wg97`), 0-shot | Fireworks batch | **94.2%** | 60.4% | 91.8% | 90.2% | 75.7% | — ³ | $0.22 |
 | Claude Opus 5.5, 5-shot | API via OpenRouter | 89.9% | 67.4% | 91.2% | 93.4% | 81.5% | 5.3 s / 7.2 s | $9.92 |
+| GPT-6.1 Terra Pro, 5-shot | API via OpenRouter | 89.9% | 56.2% | 90.8% | 92.2% | 72.1% | 4.1 s / 8.0 s | $5.01 |
 | Claude Opus 5.5, 20-shot (fairness check) | API via OpenRouter | 88.4% | 68.1% | 91.1% | 94.3% | 81.9% | 3.8 s / 6.1 s | $14.48 |
 | GPT-5.5, 5-shot | API via OpenRouter | 88.4% | 53.1% | 90.9% | 93.2% | 65.9% | 3.7 s / 8.8 s | $10.40 |
 | GPT-5.6 Terra, 5-shot | API via OpenRouter | 88.4% | 49.0% | 87.9% | 92.5% | 61.6% | 2.4 s / 3.7 s | $2.62 |
@@ -114,6 +116,7 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | Lightning-3.5-30B off the shelf | −1.7 [−8.0, +4.6] | +1.4 [−6.4, +8.6] | +4.9 [+1.8, +8.3] | +0.4 [−2.7, +3.6] | −6.2 [−12.1, −0.3] |
 | Lightning-3.5-30B + LoRA | +18.1 [+11.2, +25.0] | +2.9 [−2.4, +9.1] | +4.2 [+0.4, +8.2] | +2.5 [−1.3, +6.4] | +18.1 [+12.0, +24.2] |
 | Claude Opus 5.5, 5-shot | +25.0 [+16.8, +33.1] | −1.4 [−8.3, +4.3] | +3.7 [+0.2, +7.4] | +5.7 [+2.7, +8.9] | +23.9 [+16.7, +31.2] |
+| GPT-6.1 Terra Pro, 5-shot | +13.9 [+5.9, +22.0] | −1.4 [−9.3, +5.9] | +3.3 [−0.5, +7.2] | +4.5 [+1.7, +7.6] | +14.5 [+8.0, +21.2] |
 | Claude Opus 5.5, 20-shot | +25.7 [+17.5, +33.6] | −2.9 [−10.6, +3.2] | +3.6 [−0.0, +7.3] | +6.6 [+3.6, +10.0] | +24.3 [+17.1, +31.4] |
 | GPT-5.5, 5-shot | +10.8 [+4.0, +17.3] | −2.9 [−10.1, +3.2] | +3.3 [−0.6, +7.3] | +5.5 [+2.7, +8.6] | +8.3 [+2.9, +13.8] |
 | GPT-5.6 Terra, 5-shot | +6.6 [+0.3, +13.0] | −2.9 [−7.1, +0.0] | +0.4 [−3.9, +4.5] | +4.9 [+2.2, +7.8] | +4.0 [−1.5, +9.5] |
@@ -133,11 +136,12 @@ All arms, same 288 rows, same prompt, same scorer (`scripts/11_score_test.sh`, `
 | Qwen3-8B + LoRA v2 vs Claude Opus 5.5 | −7.6 | 22 / 44 | 0.0092 | [−13.9, −1.5] | significant (Opus ahead) |
 | Claude Opus 5.5 vs Qwen3-8B off the shelf | +25.0 | 102 / 30 | 2.3e-10 | [+16.8, +33.1] | significant |
 | Claude Opus 5.5, 20-shot vs 5-shot | +0.7 | 10 / 8 | 0.81 | [−2.2, +3.9] | not significant |
+| GPT-6.1 Terra Pro vs Qwen3-8B off the shelf | +13.9 | 81 / 41 | 0.00037 | [+5.9, +22.0] | significant |
 | GPT-5.5 vs Qwen3-8B off the shelf | +10.8 | 59 / 28 | 0.0012 | [+4.0, +17.3] | significant |
 | GPT-5.6 Terra vs Qwen3-8B off the shelf | +6.6 | 48 / 29 | 0.04 | [+0.3, +13.0] | significant |
 | Router vs LoRA v1 alone | +1.7 | — | — | [−1.2, +4.5] | not significant |
 
-**What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.2, +3.9]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm except the un-tuned Nemotron is within noise of every other (88–91%): they all know what "cleared to land" means; what separates them is who said it and to whom.
+**What the frontier models do on unseen airports.** Opus at 5-shot scores 67.4%; giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7 [−2.2, +3.9]) at 1.5× the cost. GPT-6.1 Terra Pro (56.2%, the newest OpenAI model as of today), GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are all significantly below Opus and below our Nemotron LoRA. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) every arm except the un-tuned Nemotron is within noise of every other (88–91%): they all know what "cleared to land" means; what separates them is who said it and to whom.
 
 **Gains and regressions, not just the average** (`scripts/22_gains_regressions.py`; the NVIDIA enablement session's ask — which rows did the fine-tune fix, which did it break, and would a broken row change what the ledger does?). Base → LoRA on the 288 test rows: 80 right under both, 87 wrong under both, **79 fixed, 42 broken**. Severity is judged on the record the ledger ingests: *ledger-visible* = the runway-critical action set or the callsign set is wrong (the ledger would track the wrong aircraft or the wrong clearance); *role-only* = instruction vs read-back confused, aircraft and action right; *other action* = a non-runway action (contact, report, speed) missed or added.
 

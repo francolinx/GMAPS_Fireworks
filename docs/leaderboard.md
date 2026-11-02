@@ -6,6 +6,7 @@
 | Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks) | 60.4% | 94.2% | +18.1, significant | $0.06 |
 | Qwen3-8B + LoRA v2 (3 epochs, Fireworks) | 59.7% | 89.9% | +17.4, significant | $0.02 |
 | Router: LoRA v1 → Opus on weak outputs | 56.9% | 88.4% | +14.6, significant | — |
+| GPT-6.1 Terra Pro, 5-shot | 56.2% | 89.9% | +13.9, significant | $1.44 |
 | Qwen3-8B + LoRA v1 (1 epoch, DGX Spark) | 55.2% | 88.4% | +12.8, significant | ~$0 (on-prem) |
 | GPT-5.5, 5-shot | 53.1% | 88.4% | +10.8, significant | $3.00 |
 | GPT-5.6 Terra, 5-shot | 49.0% | 88.4% | +6.6, significant | $0.76 |
