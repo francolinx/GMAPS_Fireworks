@@ -6,7 +6,7 @@
 
 ![GMAPS runway monitor — KSFO 28L, SIM212 cleared to land, RESCUE7 cleared to cross at E](docs/runway_monitor_sfo_28l.png)
 
-**One sentence.** A fine-tuned 8B open model parses real air-traffic-control radio into the structured record a runway-conflict engine needs, at **[N]% clearance-state accuracy on 288 real transmissions from three airports it never saw, vs [M]% for [frontier model]**, at ~1/20th the per-transmission cost — and the same adapter runs in the tower on a DGX Spark with no internet.
+**One sentence.** A fine-tuned 8B open model parses real air-traffic-control radio into the structured record a runway-conflict engine needs, at **[N]% clearance-state accuracy on 288 real transmissions from three airports it never saw, vs [M]% for [frontier model]**, at 1/[K] the per-transmission cost — and the same adapter runs in the tower on a DGX Spark with no internet.
 
 ## 1. Project overview
 
