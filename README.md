@@ -71,7 +71,7 @@
 
 **Cost at tower scale** (10,000 transmissions/day, list prices, measured token counts): frontier 5-shot ≈ $[x]/day/airport; fine-tuned 0-shot ≈ $[y]/day; across the ~520 FAA and contract towers in the US that is $[X]/yr vs $[Y]/yr — and only one of the two can run inside the tower at all.
 
-**Dry run (dev split, Nov 1, not the test set):** fine-tuning lifted full-record exact from 42.4% to 70.6% and role accuracy from 58.2% to 88.1% over the prompted base on 85 in-distribution rows (`STATUS.md`). Dev numbers are reported for transparency only.
+**Dry runs (dev split, 85 in-distribution rows — not the test set; `results/dev/`, reported for transparency only).** Nov 1 on the Spark: the 1-epoch LoRA lifted full-record exact from 42.4% to 70.6% over the prompted base (scored under the earlier rule that still counted ACK). Nov 2, 08:00 PT, frontier models at 5-shot under the final rule: Claude Opus 5.5 **90.6%**, GPT-5.5 83.5%, GPT-5.6 Terra 71.8%; Opus at 20-shot 87.1%. These set the bar the test run has to meet.
 
 ## 5. Tradeoffs and limitations
 

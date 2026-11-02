@@ -1,0 +1,428 @@
+[
+  {
+    "model": "anthropic/claude-opus-5.5",
+    "file": "anthropic_claude-opus-5.5_fs5.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9937106918238994,
+    "command_span_f1": 0.7006369426751592,
+    "value_f1": 0.48571428571428577,
+    "action_f1": 0.9531249999999999,
+    "action_exact": 0.9411764705882353,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9354838709677419,
+    "role_acc": 0.9552238805970149,
+    "full_record_exact": 0.9058823529411765,
+    "latency_p50_ms": 6077.1693140000025,
+    "latency_p95_ms": 9650.028127000041,
+    "latency_mean_ms": 6255.268675929408,
+    "prompt_tokens": 108922,
+    "completion_tokens": 20522,
+    "cost_usd_total": 0.846128,
+    "cost_usd_per_1k_segments": 9.95444705882353,
+    "ci95": {
+      "callsign_f1": [
+        0.9801324503311257,
+        1.0
+      ],
+      "action_f1": [
+        0.9032258064516129,
+        0.991869918699187
+      ],
+      "action_exact": [
+        0.8823529411764706,
+        0.9882352941176471
+      ],
+      "runway_critical_exact": [
+        1.0,
+        1.0
+      ],
+      "role_acc": [
+        0.9,
+        1.0
+      ],
+      "full_record_exact": [
+        0.8352941176470589,
+        0.9647058823529412
+      ]
+    }
+  },
+  {
+    "model": "openai/gpt-5.5",
+    "file": "openai_gpt-5.5_fs5.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.975,
+    "command_span_f1": 0.7073170731707317,
+    "value_f1": 0.4976958525345622,
+    "action_f1": 0.9384615384615386,
+    "action_exact": 0.9176470588235294,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9206349206349206,
+    "role_acc": 0.8955223880597015,
+    "full_record_exact": 0.8352941176470589,
+    "latency_p50_ms": 4246.854028000143,
+    "latency_p95_ms": 9354.541892999805,
+    "latency_mean_ms": 4777.675240294101,
+    "prompt_tokens": 67532,
+    "completion_tokens": 19571,
+    "cost_usd_total": 0.92479,
+    "cost_usd_per_1k_segments": 10.879882352941177,
+    "ci95": {
+      "callsign_f1": [
+        0.9419354838709677,
+        1.0
+      ],
+      "action_f1": [
+        0.887218045112782,
+        0.9798657718120806
+      ],
+      "action_exact": [
+        0.8588235294117647,
+        0.9764705882352941
+      ],
+      "runway_critical_exact": [
+        1.0,
+        1.0
+      ],
+      "role_acc": [
+        0.8166666666666667,
+        0.9577464788732394
+      ],
+      "full_record_exact": [
+        0.7529411764705882,
+        0.9058823529411765
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": -0.018710691823899395,
+        "ci95": [
+          -0.0496894409937888,
+          0.0
+        ]
+      },
+      "action_f1": {
+        "delta": -0.01466346153846132,
+        "ci95": [
+          -0.04799999999999993,
+          0.01607071112896752
+        ]
+      },
+      "action_exact": {
+        "delta": -0.02352941176470591,
+        "ci95": [
+          -0.05882352941176472,
+          0.0
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "role_acc": {
+        "delta": -0.05970149253731338,
+        "ci95": [
+          -0.12328767123287665,
+          -0.014705882352941124
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.07058823529411762,
+        "ci95": [
+          -0.12941176470588234,
+          -0.0235294117647058
+        ]
+      }
+    }
+  },
+  {
+    "model": "openai/gpt-5.6-terra",
+    "file": "openai_gpt-5.6-terra_fs5.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.980891719745223,
+    "command_span_f1": 0.6543209876543209,
+    "value_f1": 0.4717948717948719,
+    "action_f1": 0.9457364341085271,
+    "action_exact": 0.9294117647058824,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9354838709677419,
+    "role_acc": 0.7313432835820896,
+    "full_record_exact": 0.7176470588235294,
+    "latency_p50_ms": 2883.4238330000517,
+    "latency_p95_ms": 4194.3832970000585,
+    "latency_mean_ms": 2790.9226289058897,
+    "prompt_tokens": 67532,
+    "completion_tokens": 7573,
+    "cost_usd_total": 0.22593999999999997,
+    "cost_usd_per_1k_segments": 2.6581176470588233,
+    "ci95": {
+      "callsign_f1": [
+        0.948051948051948,
+        1.0
+      ],
+      "action_f1": [
+        0.8965517241379309,
+        0.9850746268656716
+      ],
+      "action_exact": [
+        0.8705882352941177,
+        0.9764705882352941
+      ],
+      "runway_critical_exact": [
+        1.0,
+        1.0
+      ],
+      "role_acc": [
+        0.6268656716417911,
+        0.835820895522388
+      ],
+      "full_record_exact": [
+        0.6235294117647059,
+        0.8117647058823529
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": -0.012818972078676327,
+        "ci95": [
+          -0.046615636019609386,
+          0.012732322153385933
+        ]
+      },
+      "action_f1": {
+        "delta": -0.0073885658914727426,
+        "ci95": [
+          -0.059658223985352477,
+          0.04264034028251862
+        ]
+      },
+      "action_exact": {
+        "delta": -0.0117647058823529,
+        "ci95": [
+          -0.07058823529411762,
+          0.04705882352941171
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "role_acc": {
+        "delta": -0.22388059701492535,
+        "ci95": [
+          -0.3239436619718309,
+          -0.13432835820895517
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.18823529411764706,
+        "ci95": [
+          -0.2823529411764706,
+          -0.09411764705882353
+        ]
+      }
+    }
+  },
+  {
+    "model": "anthropic/claude-opus-5.5",
+    "file": "anthropic_claude-opus-5.5_fs20.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9811320754716981,
+    "command_span_f1": 0.7200000000000001,
+    "value_f1": 0.6875,
+    "action_f1": 0.9365079365079365,
+    "action_exact": 0.9294117647058824,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9354838709677419,
+    "role_acc": 0.9402985074626866,
+    "full_record_exact": 0.8705882352941177,
+    "latency_p50_ms": 4250.432331000184,
+    "latency_p95_ms": 6205.479205999836,
+    "latency_mean_ms": 4168.527441776472,
+    "prompt_tokens": 257672,
+    "completion_tokens": 11134,
+    "cost_usd_total": 1.253368,
+    "cost_usd_per_1k_segments": 14.745505882352942,
+    "ci95": {
+      "callsign_f1": [
+        0.9473684210526315,
+        1.0
+      ],
+      "action_f1": [
+        0.8780487804878049,
+        0.9824561403508771
+      ],
+      "action_exact": [
+        0.8705882352941177,
+        0.9764705882352941
+      ],
+      "runway_critical_exact": [
+        1.0,
+        1.0
+      ],
+      "role_acc": [
+        0.8805970149253731,
+        0.9861111111111112
+      ],
+      "full_record_exact": [
+        0.788235294117647,
+        0.9294117647058824
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": -0.012578616352201255,
+        "ci95": [
+          -0.04054054054054057,
+          0.0
+        ]
+      },
+      "action_f1": {
+        "delta": -0.016617063492063378,
+        "ci95": [
+          -0.05812220566318915,
+          0.015104966717869872
+        ]
+      },
+      "action_exact": {
+        "delta": -0.0117647058823529,
+        "ci95": [
+          -0.03529411764705881,
+          0.0
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "role_acc": {
+        "delta": -0.01492537313432829,
+        "ci95": [
+          -0.0491803278688524,
+          0.0
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.03529411764705881,
+        "ci95": [
+          -0.08235294117647052,
+          0.0
+        ]
+      }
+    }
+  },
+  {
+    "model": "openai/gpt-5.6-luna",
+    "file": "openai_gpt-5.6-luna_fs5.dev.preds.jsonl",
+    "n": 85,
+    "missing": 0,
+    "json_valid": 1.0,
+    "callsign_f1": 0.9743589743589742,
+    "command_span_f1": 0.6867469879518072,
+    "value_f1": 0.5333333333333332,
+    "action_f1": 0.9384615384615386,
+    "action_exact": 0.9176470588235294,
+    "runway_critical_n": 29,
+    "runway_critical_exact": 1.0,
+    "runway_critical_f1": 0.9354838709677419,
+    "role_acc": 0.7761194029850746,
+    "full_record_exact": 0.7176470588235294,
+    "latency_p50_ms": 2888.798688999998,
+    "latency_p95_ms": 6622.649640999995,
+    "latency_mean_ms": 3256.5368587764724,
+    "prompt_tokens": 67532,
+    "completion_tokens": 11885,
+    "cost_usd_total": null,
+    "cost_usd_per_1k_segments": null,
+    "ci95": {
+      "callsign_f1": [
+        0.9403973509933775,
+        1.0
+      ],
+      "action_f1": [
+        0.8907563025210083,
+        0.9777777777777777
+      ],
+      "action_exact": [
+        0.8588235294117647,
+        0.9647058823529412
+      ],
+      "runway_critical_exact": [
+        1.0,
+        1.0
+      ],
+      "role_acc": [
+        0.671875,
+        0.8714285714285714
+      ],
+      "full_record_exact": [
+        0.611764705882353,
+        0.8117647058823529
+      ]
+    },
+    "delta_vs_first": {
+      "callsign_f1": {
+        "delta": -0.019351717464925144,
+        "ci95": [
+          -0.05590062111801242,
+          0.012572332542358677
+        ]
+      },
+      "action_f1": {
+        "delta": -0.01466346153846132,
+        "ci95": [
+          -0.0608282743283044,
+          0.03252032520325199
+        ]
+      },
+      "action_exact": {
+        "delta": -0.02352941176470591,
+        "ci95": [
+          -0.07058823529411762,
+          0.02352941176470591
+        ]
+      },
+      "runway_critical_exact": {
+        "delta": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "role_acc": {
+        "delta": -0.17910447761194026,
+        "ci95": [
+          -0.27419354838709686,
+          -0.09375
+        ]
+      },
+      "full_record_exact": {
+        "delta": -0.18823529411764706,
+        "ci95": [
+          -0.2823529411764706,
+          -0.09411764705882353
+        ]
+      }
+    }
+  }
+]

@@ -10,8 +10,8 @@ set -euo pipefail
 MODEL="${1:?model name as served}"; FEWSHOT="${2:-0}"
 SAFE="$(echo "$MODEL" | tr '/:' '__')"
 mkdir -p results/dev
-python3 bench/infer.py --model "$MODEL" --split data/splits/dev.jsonl --out "results/dev/$SAFE.dev.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
-python3 bench/infer.py --model "$MODEL" --split data/synthetic/us_stress.jsonl --out "results/dev/$SAFE.stress.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
+python3 bench/infer.py --model "$MODEL" --split data/splits/dev.jsonl --out "results/dev/$SAFE.dev.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" --max-tokens "${MAX_TOKENS:-1500}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
+python3 bench/infer.py --model "$MODEL" --split data/synthetic/us_stress.jsonl --out "results/dev/$SAFE.stress.preds.jsonl" --fewshot "$FEWSHOT" --concurrency "${CONC:-8}" --max-tokens "${MAX_TOKENS:-1500}" ${JSON_MODE:+--json-mode} ${EXTRA:+--extra "$EXTRA"}
 {
   echo; echo "## $MODEL  (fewshot=$FEWSHOT, $(date -u +%FT%TZ))"; echo; echo "### dev (ATCO2 gold, training airports)"
   python3 bench/score.py data/splits/dev.jsonl "results/dev/$SAFE.dev.preds.jsonl" --prices results/prices.json --out "results/dev/$SAFE.dev.scores.json"
