@@ -41,11 +41,19 @@ def account_id(c):
 
 def cmd_upload(args):
     c = client(); aid = account_id(c)
-    n = sum(1 for l in open(args.file, encoding="utf-8") if l.strip())
+    # Fireworks expects {"messages":[...]} per line and nothing else: strip bookkeeping keys ("source") into a temp file.
+    import tempfile
+    tmp = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8")
+    n = 0
+    for l in open(args.file, encoding="utf-8"):
+        if l.strip():
+            ex = json.loads(l); tmp.write(json.dumps({"messages": ex["messages"]}, ensure_ascii=False) + "\n"); n += 1
+    tmp.close()
     print(f"creating dataset {args.dataset_id} in account {aid} ({n} examples) ...")
     c.datasets.create(account_id=aid, dataset_id=args.dataset_id, dataset={"display_name": args.dataset_id, "example_count": n})
-    with open(args.file, "rb") as fh:
+    with open(tmp.name, "rb") as fh:
         c.datasets.upload(dataset_id=args.dataset_id, account_id=aid, file=fh)
+    os.unlink(tmp.name)
     for _ in range(60):
         d = c.datasets.get(dataset_id=args.dataset_id, account_id=aid)
         state = getattr(d, "state", None)

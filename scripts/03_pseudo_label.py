@@ -9,7 +9,7 @@ Step 1 (any OpenAI-compatible teacher — frontier API, Fireworks, or a local vL
 Step 2 (this script): turn teacher predictions into gold-format rows, keeping only rows where
   - the output parsed as JSON,
   - every callsign/command/value span is a verbatim substring of the transcript (no paraphrase, no hallucination),
-  - at least one command maps to a known action, OR there are no commands but ≥1 value (pilot readback style),
+  - at least one command maps to a known action, OR there are no commands but ≥1 value or a callsign (callsign-only calls exist in gold),
 and take the speaker role from the SOURCE when it is known (UWB ids carry it; ATCOSIM is controller-only).
 
   python scripts/03_pseudo_label.py data/external/uwb_atcc.jsonl data/pseudo/uwb_atcc.preds.jsonl data/pseudo/uwb_atcc.gold.jsonl
@@ -59,8 +59,8 @@ def main():
             acts = actions_for(spans["command"]) - {"OTHER"}
             if spans["command"] and not acts:
                 stats["unknown_action"] += 1; continue
-            if not spans["command"] and not spans["value"]:
-                stats["empty"] += 1; continue
+            if not spans["command"] and not spans["value"] and not spans["callsign"]:
+                stats["empty"] += 1; continue      # nothing extracted at all; callsign-only calls are kept (they exist in gold)
             role = r.get("role") if r.get("role") in ("ATCO", "PILOT") else str(d.get("role", "UNKNOWN")).upper()
             if role not in ("ATCO", "PILOT", "UNKNOWN"):
                 role = "UNKNOWN"
