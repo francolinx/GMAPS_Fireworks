@@ -2,7 +2,7 @@
 
 **Fireworks: Deploy buildathon with Microsoft & NVIDIA · Nov 2, 2026 · San Francisco**
 
-![GMAPS runway monitor — KSFO 28L: MPL212 cleared to land, RESCUE 7 cleared to cross at E; the alert, the hold-short, and the live parser running on the DGX Spark](docs/runway_monitor_sfo_28l_gmaps.png)
+![GMAPS runway monitor — LaGuardia, 23:37:04 EDT: the alert the second the crossing clearance is parsed, with input → output per transmission, the who-stepped-in timeline, and the live parser on the DGX Spark](docs/runway_monitor_lga_04_gmaps.png)
 
 **One sentence.** On 288 real tower transmissions from three airports it never saw, a one-epoch LoRA on NVIDIA's open Nemotron-3-Nano-30B-A3B goes from **39.2% to 70.1%** full-record accuracy and **ties Claude Opus 5.5 (67.4%; paired Δ +2.8, 95% CI [−2.0, +7.4])** at ~1/45th the per-transmission cost; the pre-registered 8B arm (Qwen3-8B) goes from **42.4% to 59.7% (+17.4 [+10.5, +24.5], p = 7 × 10⁻⁷)** and answers in 0.7 s hosted — both are open weights that can run inside the tower on a DGX Spark with no internet.
 
@@ -53,7 +53,9 @@
 
 ## 4. Results
 
-![Before → after on the frozen test split](docs/results_full_record.png)
+![Before → after: the same recipe on three open models, next to the frontier](docs/before_after.png)
+
+![Every arm on the frozen test split](docs/results_full_record.png)
 
 **Leaderboard** — every system on the same 288 rows, sorted; paired verdict vs the off-the-shelf baseline (McNemar + recording bootstrap, both must pass); cost = list price × the tokens the run actually used (`scripts/28_leaderboard.py`):
 
