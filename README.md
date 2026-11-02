@@ -55,6 +55,27 @@
 
 ![Before → after on the frozen test split](docs/results_full_record.png)
 
+**Leaderboard** — every system on the same 288 rows, sorted; paired verdict vs the off-the-shelf baseline (McNemar + recording bootstrap, both must pass); cost = list price × the tokens the run actually used (`scripts/28_leaderboard.py`):
+
+<!-- leaderboard:start -->
+| System | Full-record accuracy | Clearance-state accuracy | vs base Qwen3-8B | Cost of the 288-transmission run |
+|---|---|---|---|---|
+| **Nemotron-3-Nano-30B-A3B + LoRA** (1 epoch, Fireworks) | **70.1%** | 88.4% | +27.8, significant | $0.06 |
+| Claude Opus 5.5, 20-shot | 68.1% | 88.4% | +25.7, significant | $4.17 |
+| Claude Opus 5.5, 5-shot | 67.4% | 89.9% | +25.0, significant | $2.86 |
+| Nemotron-3.5-Lightning-30B-A3B + LoRA (1 epoch, Fireworks) | 60.4% | 94.2% | +18.1, significant | $0.06 |
+| Qwen3-8B + LoRA v2 (3 epochs, Fireworks) | 59.7% | 89.9% | +17.4, significant | $0.02 |
+| Router: LoRA v1 → Opus on weak outputs | 56.9% | 88.4% | +14.6, significant | — |
+| Qwen3-8B + LoRA v1 (1 epoch, DGX Spark) | 55.2% | 88.4% | +12.8, significant | ~$0 (on-prem) |
+| GPT-5.5, 5-shot | 53.1% | 88.4% | +10.8, significant | $3.00 |
+| GPT-5.6 Terra, 5-shot | 49.0% | 88.4% | +6.6, significant | $0.76 |
+| Nemotron-30B + LoRA, reasoning on (first attempt) | 49.0% | 85.5% | +6.6, significant | $0.15 |
+| Qwen3-8B off the shelf (baseline), 5-shot | 42.4% | 91.3% |  | ~$0 (on-prem) |
+| Nemotron-3.5-Lightning-30B-A3B off the shelf, 5-shot | 40.6% | 92.8% | -1.7, not significant | $0.13 |
+| Nemotron-3-Nano-30B-A3B off the shelf, 5-shot | 39.2% | 81.2% | -3.1, not significant | $0.13 |
+| Nemotron-30B off the shelf, reasoning on (first attempt), 5-shot | 29.5% | 59.4% | -12.8, significant loss | $0.27 |
+<!-- leaderboard:end -->
+
 **Headline.** A fine-tuned open NVIDIA model **matches Claude Opus 5.5 on real tower radio**: Nemotron-3-Nano-30B-A3B + our LoRA (one epoch on Fireworks, $10.15 of training, 0-shot) scores **70.1%** full-record exact on the 288 frozen test transmissions vs Opus 5.5's **67.4%** (5-shot) — paired Δ +2.8, recording-bootstrap 95% CI [−2.0, +7.4], McNemar p = 0.30: a statistical tie, at roughly **1/45th of the per-transmission cost** ($0.22 vs $9.92 per 1,000) and with weights that can run inside the tower. Against its own off-the-shelf base (39.2%, 5-shot) the gain is **+30.9 points [+23.8, +37.9], p = 7 × 10⁻¹⁷**. The same one-epoch recipe on **Nemotron-3.5-Lightning-30B-A3B** (the model the NVIDIA session used) gives 40.6% → 60.4% (+19.8 [+14.3, +25.3]) and the best clearance-state accuracy of any arm, **94.2%** on the 69 runway-critical rows (Opus 89.9%, Δ +4.3 [+0.0, +9.5]) — but it stays 6.9 points behind Opus on the full record. Two models, one recipe, one test set: the fine-tune is the effect, not the model.
 
 **The pre-registered primary comparison (before → after on Qwen3-8B).** Off the shelf, 5-shot: **42.4%**. The same model with our LoRA — v2, three epochs on Fireworks, 0-shot: **59.7%**, **+17.4 points [+10.5, +24.5], McNemar p = 7 × 10⁻⁷**, hosted p50 **0.70 s**. The Nov 1 dry-run adapter (one epoch on the DGX Spark) scored 55.2% (+12.8 [+5.9, +19.7]); v2 over v1 is +4.5 [−1.7, +10.8], not significant on 288 rows. Role accuracy is where the fine-tune gains (57.6% → 79.3%); clearance-state accuracy on the 69 runway-critical rows is unchanged within noise for every open arm (88–91%), and the 8B v2 ties Opus on it exactly (89.9% vs 89.9%). The 8B is still **7.6 points behind Opus** on full record ([−13.9, −1.5], significant); the 30B closes that gap.
