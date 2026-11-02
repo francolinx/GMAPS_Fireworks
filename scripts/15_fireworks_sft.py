@@ -87,7 +87,10 @@ def cmd_train(args):
 def cmd_status(args):
     c = client(); aid = account_id(c)
     while True:
-        j = c.supervised_fine_tuning_jobs.get(supervised_fine_tuning_job_id=args.job_id, account_id=aid)
+        try:
+            j = c.supervised_fine_tuning_jobs.get(supervised_fine_tuning_job_id=args.job_id, account_id=aid)
+        except Exception as e:  # transient 5xx from the control plane: keep polling
+            print(time.strftime("%H:%M:%S"), "poll error (retrying):", str(e)[:120]); time.sleep(30); continue
         state = str(getattr(j, "state", ""))
         print(time.strftime("%H:%M:%S"), state, getattr(j, "status", "") or "")
         if any(s in state.upper() for s in ("COMPLETED", "FAILED", "CANCELLED")):
