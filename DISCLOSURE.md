@@ -47,3 +47,7 @@ responsible for the implementation and the reported results.
 | Test runner | `scripts/10_eval_test.sh`, `scripts/11_score_test.sh` | hash-checked frozen-test run and joint scoring — written before 10:30, **first executed during the build period** |
 | Prices | `results/prices.json` | list prices (OpenAI, Fireworks) as of 2026-11-02 |
 | README | `README.md`, `docs/runway_monitor_sfo_28l.png` | narrative, metric framing, business math template, screenshot of the dry-run viewer |
+| Dev baselines | `results/dev/*_fs5.dev.preds.jsonl`, `results/dev/frontier_fs5.dev.scores.json` | Nov 2 08:00 PT dry run of three frontier models on the DEV split via OpenRouter (not test) |
+| Mix filter | `scripts/12_filter_sft.py` | drops UNKNOWN-role training rows |
+| Router | `scripts/13_router.py` | post-processing confidence router over two prediction files (written 08:10, first run during the build period) |
+| Plan | `MONDAY.md` | build-day run book |
