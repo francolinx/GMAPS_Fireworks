@@ -55,7 +55,9 @@
 
 ## 4. Results
 
-*Filled from `results/test/scores.md` during the build period. Produced by `scripts/11_score_test.sh <baseline> <arms…>`.*
+*Produced by `scripts/11_score_test.sh <baseline> <arms…>` from `results/test/`; all four frontier reference arms were run 10:53–12:05 PT on Nov 2.*
+
+**What the frontier models do on unseen airports.** Claude Opus 5.5 at 5-shot scores 67.4% full-record exact (95% CI [61.5, 72.6]); giving it 20 examples instead of 5 changes nothing (68.1%, paired Δ +0.7, CI [−2.4, +3.5]) at 1.5× the cost. GPT-5.5 (53.1%) and GPT-5.6 Terra (49.0%) are significantly worse. All three lose mostly on **speaker role** (Opus 81.5%, GPT-5.5 65.9%, Terra 61.6%): on a pilot-heavy test set they read read-backs as instructions. The cue they miss is positional and learnable — in the gold data controllers put the callsign *first* in 91% of transmissions, pilots put it *last* in 55% — and it is exactly the kind of regularity 500 real training rows teach a small model and twenty prompt examples do not. On the operational subset (clearance-state accuracy, n=69) the frontier models are strong (88–90%): they know what "cleared to land" means; what they get wrong is who said it.
 
 | Arm | Where it ran | Clearance-state acc (n=70) | Full record exact (n=288) | Action F1 | Callsign F1 | Role acc | JSON valid | p50 / p95 ms | $/1k |
 |---|---|---|---|---|---|---|---|---|---|
