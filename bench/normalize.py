@@ -11,6 +11,10 @@ GMAPS cares about) at the top. Anything unmatched becomes OTHER; run
 """
 import json, re, sys, collections
 
+# Classes that are not operational actions: the ledger never consumes them, so the scorer drops them from the
+# action set of BOTH gold and prediction (ACK = acknowledgements / read-back filler / requests; OTHER = unmapped).
+NON_ACTIONS = {"OTHER", "ACK"}
+
 RUNWAY_CRITICAL = {
     "CLEARED_TO_LAND", "CLEARED_FOR_TAKEOFF", "LINE_UP_AND_WAIT", "HOLD_SHORT",
     "HOLD_POSITION", "CROSS_RUNWAY", "BACKTRACK", "TOUCH_AND_GO", "VACATE_RUNWAY", "GO_AROUND",
@@ -26,6 +30,8 @@ ACTIONS = [
 
 # (action, regex) — evaluated in order on the lower-cased, whitespace-collapsed span.
 RULES = [
+    # --- phrases that would otherwise be caught by a runway rule via a substring ("call you before departure") ---
+    ("ACK",                 r"\bcall you\b|\bi call you\b|\bpass your message\b|^pass$|\bsay again\b|\bstand ?by\b"),
     # --- runway occupancy / clearance state (GMAPS-critical) -----------------------------
     ("GO_AROUND",           r"\bgo(ing)?[- ]?around\b|\bbreaking off\b"),
     ("TOUCH_AND_GO",        r"\btouch and go\b|\bstop and go\b|\bin and go\b"),
@@ -42,9 +48,7 @@ RULES = [
     ("CLIMB",               r"\bclimb"),
     ("DESCEND",             r"\bdescen|\bin descent\b"),
     ("CROSS_RUNWAY",        r"\bcross"),
-    ("HOLD_POSITION",       r"\bhold(ing)? position\b|\bhold on\b|^hold(ing)?$|\bholding point\b|"
-                            r"\bstand ?by\b|\bwait(ing)?\b|^stop$|\bcall you( back)?$|\bi call you back\b|"
-                            r"\bcall you (passing|when ready)\b"),
+    ("HOLD_POSITION",       r"\bhold(ing)? position\b|\bhold on\b|^hold(ing)?$|\bholding point\b|\bwait(ing)?\b|^stop$"),
     # --- ground movement -------------------------------------------------------------------
     ("STARTUP_PUSHBACK",    r"\bstart ?up\b|\bpush ?back\b|\bpush and start\b|\bengine start\b|"
                             r"\bstart (and push|approved)\b|^starting$|\brun up\b|\bready for ifr\b|\bifr clearance\b"),
@@ -66,7 +70,7 @@ RULES = [
                             r"\brequested change\b|\bexpect clearance\b"),
     # --- position / status reports --------------------------------------------------------
     ("POSITION_REPORT",     r"\bpassing\b|\bapproaching\b|\bleaving\b|\bentering\b|\bidentified\b|\bis passing\b|"
-                            r"\bwhen passing\b|^pass$|\binbound\b|\bwe just upon\b|\bstop established\b|\bin sight\b"),
+                            r"\bwhen passing\b|\binbound\b|\bstop established\b"),
     # --- acknowledgements / requests / misc -------------------------------------------------
     ("ACK",                 r"\bconfirm|\bsay again\b|^say$|^again$|\bcopy|\bcopied\b|\baffirm|\bapproved?\b|"
                             r"\bgo ahead\b|\bpass your message\b|\bnegative\b|\becho\b|\bbreak break\b|\bsorry\b|"

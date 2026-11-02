@@ -17,7 +17,7 @@ prices.json maps model name -> {"in": $/1M prompt tokens, "out": $/1M completion
 import argparse, collections, json, os, re, statistics, sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from normalize import actions_for, RUNWAY_CRITICAL  # noqa: E402
+from normalize import actions_for, RUNWAY_CRITICAL, NON_ACTIONS  # noqa: E402
 
 _PUNCT = re.compile(r"[^\w\s]")
 
@@ -133,8 +133,8 @@ def score_file(gold_rows, pred_path, prices):
             tp, fp, fn = multiset_counts(gold_ents[k], pred_ents[k])
             ent[k][0] += tp; ent[k][1] += fp; ent[k][2] += fn
 
-        ga = actions_for(g["gold"]["command"]) - {"OTHER"}
-        pa = actions_for(as_list(d.get("commands"))) - {"OTHER"}
+        ga = actions_for(g["gold"]["command"]) - NON_ACTIONS
+        pa = actions_for(as_list(d.get("commands"))) - NON_ACTIONS
         tp, fp, fn = len(ga & pa), len(pa - ga), len(ga - pa)
         act[0] += tp; act[1] += fp; act[2] += fn
         a_ok = ga == pa
