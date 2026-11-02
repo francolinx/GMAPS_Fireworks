@@ -87,7 +87,7 @@ def main():
         "airport": "KLGA", "runway": "4", "crossing_taxiway": "D", "clock0": [23, 35, 0],
         "title": "LaGuardia, March 22, 2026",
         "attribution": "Geometry © OpenStreetMap contributors (ODbL). Timeline: NTSB preliminary report DCA26MA161.",
-        "geo": "klga.geojson", "center": [X[0] - 0.0036, X[1] - 0.0040], "zoom": 14.75, "center_v4": [X[0] - 0.0015, X[1] - 0.0056], "zoom_v4": 14.1,
+        "geo": "klga.geojson", "center": [X[0] - 0.0036, X[1] - 0.0040], "zoom": 14.75, "center_v4": [X[0] - 0.0015, X[1] - 0.0056], "zoom_v4": 14.1, "center_v4_narrow": [X[0] - 0.0012, X[1] - 0.0066], "zoom_v4_narrow": 13.85,
         "runway_line": rw, "intersection": X, "hold_point": hold, "crossing_path": D,
         "actors": {"JAZZ646": "JAZZ 646 — Air Canada Express 8646, CRJ900 C-GNJZ",
                    "TRUCK1": "TRUCK 1 — Rescue 35, Oshkosh Striker 1500, Port Authority ARFF"},

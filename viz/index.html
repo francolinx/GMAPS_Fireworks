@@ -50,7 +50,7 @@
   #tlkey{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;font-family:var(--mono);font-size:9.2px;line-height:1.35;margin-top:2px;color:#cdd6ea} #tlkey .never{color:var(--dim)}
   #tlcap{font-family:var(--mono);font-size:12px;font-weight:700;color:#eafff1;margin-top:5px;padding:5px 8px;border:1px solid var(--green);border-radius:6px;background:rgba(8,60,32,.9);display:none} #tlcap.on{display:block}
   .banner{position:absolute;left:50%;top:132px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:7px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:6} .banner.on{display:block}
-  #caption{position:absolute;left:50%;top:176px;transform:translateX(-50%);width:max-content;max-width:88%;padding:9px 16px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:14px;line-height:1.45;display:none;z-index:8;text-align:center}
+  #caption{position:absolute;left:50%;bottom:268px;transform:translateX(-50%);width:max-content;max-width:88%;padding:9px 16px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:14px;line-height:1.45;display:none;z-index:8;text-align:center}
   #caption.red{display:block;background:rgba(120,10,30,.94);border:2px solid var(--red);color:#fff} #caption.green{display:block;background:rgba(8,60,32,.94);border:2px solid var(--green);color:#eafff1}
   #livecap{position:absolute;right:56px;top:132px;z-index:6;font-family:var(--mono);font-size:10.5px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:4px 8px;border-radius:6px;display:none}
   footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
@@ -173,7 +173,8 @@ async function boot(){
   document.getElementById('hdr').textContent = `${scn.title} · ${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway} · reconstruction, NTSB DCA26MA161 (preliminary)`;
   document.getElementById('rwy').textContent = scn.runway;
   const mt = document.getElementById('modetag'); mt.className = MODE; mt.textContent = MODE === 'asis' ? 'AS-IS · NO CROSS-CHECK' : 'WITH GMAPS';
-  map.setCenter(scn.center_v4 || scn.center); map.setZoom(scn.zoom_v4 || scn.zoom);  // v4 layout: strip on top, timeline at the bottom
+  const narrow = window.innerWidth < 1700 && scn.center_v4_narrow;  // 1440×900 clips: map column is only ~660 px wide
+  map.setCenter(narrow ? scn.center_v4_narrow : (scn.center_v4 || scn.center)); map.setZoom(narrow ? scn.zoom_v4_narrow : (scn.zoom_v4 || scn.zoom));  // v4 layout: strip on top, timeline at the bottom
   const kind = k => ({ type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === k) });
   map.addSource('tw', { type:'geojson', data: kind('taxiway') }); map.addSource('rw', { type:'geojson', data: kind('runway') }); map.addSource('hp', { type:'geojson', data: kind('holding_position') });
   map.addSource('active', { type:'geojson', data: { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } } });
