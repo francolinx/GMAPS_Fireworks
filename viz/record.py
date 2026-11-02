@@ -60,11 +60,11 @@ def main():
         t0 = time.time()
         page.goto(f"{a.base}?{q}&speed=2&autoplay=1", wait_until="domcontentloaded")
         page.wait_for_function("() => window.__done === true", timeout=int(a.max_s * 1000), polling=250)
-        lead = 0.0
+        lead = max(0.0, page.evaluate("() => window.__startedAt || 0") / 1000 - 0.3)  # trim the page-load lead-in
         live = page.evaluate("() => window.__live")
         video = page.video.path()
         ctx.close(); browser.close()
-        print(f"recorded {time.time() - t0:.1f} s; live calls: {len(live)}; latencies ms: {[round(c['latency_ms']) for c in live]}")
+        print(f"recorded {time.time() - t0:.1f} s (trim {lead:.1f} s); live calls: {len(live)}; latencies ms: {[round(c['latency_ms']) for c in live]}")
         # Playwright's webm is variable frame rate; re-time to constant 25 fps H.264.
         subprocess.run([ffmpeg_exe(), "-y", "-loglevel", "error", "-ss", f"{lead}", "-i", video, "-r", "25", "-vf", f"scale={w}:{h}",
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "20", "-movflags", "+faststart", a.out], check=True)

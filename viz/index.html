@@ -162,7 +162,7 @@ map.on('load', async () => {
   renderLookahead();
   if (LIVE) startLive();
   reset();
-  if (qs.get('autoplay') === '1'){ playing = true; setPlay(); }
+  if (qs.get('autoplay') === '1'){ setTimeout(() => { playing = true; reset(); setPlay(); window.__startedAt = performance.now(); }, 1200); }  // let tiles/fonts settle
   requestAnimationFrame(tick);
 });
 
@@ -240,7 +240,7 @@ function addTx(x){
     `<div class="text">“${x.text}”</div><pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
     `<div class="chips">${x.actions.map(a => `<span class="chip ${MODE === 'asis' ? 'norule' : (CRIT.has(a) ? 'crit' : '')}">${a}</span>`).join('')}${MODE === 'asis' ? '<span class="chip norule">no rule run</span>' : ''}</div>`;
   const list = document.getElementById('txlist'); list.appendChild(el); list.parentElement.scrollTop = list.parentElement.scrollHeight;
-  if (LIVE) liveParse(x);
+  if (LIVE && (playing || qs.get('autoplay') !== '1')) liveParse(x);  // autoplay: no call for the pre-roll render
 }
 // ---- live DGX Spark panel: every transmission goes to viz/live_server.py → vLLM :8001 on this machine ----
 let gpuLine = '…', liveModel = 'student';
