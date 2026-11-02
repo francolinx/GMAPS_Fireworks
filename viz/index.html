@@ -43,16 +43,16 @@
   #freq .top{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--dim)} #freq .top .now{letter-spacing:.16em} #freq .top .clk{margin-left:auto;color:#eef2ff;font-size:13px;font-weight:700}
   #freq .words{font-size:21px;font-weight:600;color:#fff;margin-top:5px;font-style:italic;line-height:1.25} #freq .wd{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px}
   #timeline{position:absolute;left:10px;right:10px;bottom:10px;z-index:7;background:rgba(10,16,30,.95);border:1px solid var(--line);border-radius:10px;padding:8px 12px 8px}
-  #tlbar{position:relative;height:74px;margin:0 6px} #tlbar .axis{position:absolute;left:0;right:0;top:40px;height:3px;background:#2a3a5e;border-radius:2px}
-  #tlbar .tick{position:absolute;top:47px;font-family:var(--mono);font-size:9.5px;color:var(--dim);transform:translateX(-50%)}
+  #tlbar{position:relative;height:58px;margin:0 26px} #tlbar .axis{position:absolute;left:0;right:0;top:32px;height:3px;background:#2a3a5e;border-radius:2px}
+  #tlbar .tick{position:absolute;top:38px;font-family:var(--mono);font-size:9.5px;color:var(--dim);transform:translateX(-50%)}
   #tlbar .mk{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:9.5px;white-space:nowrap;text-align:center;line-height:1.1}
   #tlbar .mk .sym{font-size:13px;display:block} #tlbar .cursor{position:absolute;top:2px;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff}
-  #tlkey{display:grid;grid-template-columns:1fr 1fr;gap:1px 14px;font-family:var(--mono);font-size:10px;margin-top:4px;color:#cdd6ea} #tlkey .never{color:var(--dim)}
-  #tlcap{font-family:var(--mono);font-size:11.5px;color:#eafff1;margin-top:5px;display:none} #tlcap.on{display:block}
-  .banner{position:absolute;left:50%;top:126px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:7px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:6} .banner.on{display:block}
-  #caption{position:absolute;left:50%;bottom:218px;transform:translateX(-50%);width:max-content;max-width:88%;padding:9px 16px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:14px;line-height:1.45;display:none;z-index:8;text-align:center}
+  #tlkey{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 12px;font-family:var(--mono);font-size:9.2px;line-height:1.35;margin-top:2px;color:#cdd6ea} #tlkey .never{color:var(--dim)}
+  #tlcap{font-family:var(--mono);font-size:12px;font-weight:700;color:#eafff1;margin-top:5px;padding:5px 8px;border:1px solid var(--green);border-radius:6px;background:rgba(8,60,32,.9);display:none} #tlcap.on{display:block}
+  .banner{position:absolute;left:50%;top:132px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:7px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:6} .banner.on{display:block}
+  #caption{position:absolute;left:50%;top:176px;transform:translateX(-50%);width:max-content;max-width:88%;padding:9px 16px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:14px;line-height:1.45;display:none;z-index:8;text-align:center}
   #caption.red{display:block;background:rgba(120,10,30,.94);border:2px solid var(--red);color:#fff} #caption.green{display:block;background:rgba(8,60,32,.94);border:2px solid var(--green);color:#eafff1}
-  #livecap{position:absolute;right:56px;bottom:200px;z-index:6;font-family:var(--mono);font-size:10.5px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:4px 8px;border-radius:6px;display:none}
+  #livecap{position:absolute;right:56px;top:132px;z-index:6;font-family:var(--mono);font-size:10.5px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:4px 8px;border-radius:6px;display:none}
   footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
   footer input[type=range]{flex:1} footer button{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono)}
   #clock{min-width:330px;color:var(--cyan)} #clock .wall{font-size:22px;font-weight:800;color:#fff;margin-right:12px;letter-spacing:.02em}
@@ -146,9 +146,10 @@ function whyLine(x, out){
   const acts = actionsOf(out), cs = (out.callsigns || [])[0], who = cs ? cs.toUpperCase() : '—';
   const rule = MODE === 'asis' ? ' (as-is: no rule runs)' : '';
   let effect;
-  if (out.role === 'ATCO' && acts.includes('CLEARED_TO_LAND') && rwyOf(out)) effect = `“cleared to land” + “runway four” → CLEARED_TO_LAND, RWY 4, ${who} → runway 4 held for the landing${rule}`;
+  if (/\brequest\b/.test(x.text) && out.role !== 'ATCO') effect = `request from ${who} (${out.role}) → not an authorization; the ledger waits for the clearance`;
+  else if (out.role === 'ATCO' && acts.includes('CLEARED_TO_LAND') && rwyOf(out)) effect = `“cleared to land” + “runway four” → CLEARED_TO_LAND, RWY 4, ${who} → runway 4 held for the landing${rule}`;
   else if (out.role === 'ATCO' && acts.includes('CROSS_RUNWAY') && rwyOf(out)) effect = `“cross” + “runway four” → CROSS_RUNWAY on RWY 4 at D, ${who} → checks against the active landing clearance${rule}`;
-  else if (acts.includes('REQUEST')) effect = `request from ${who} (${out.role}) → not an authorization; the ledger waits for the clearance`;
+  else if (acts.includes('REQUEST') || /\brequest\b/.test(x.text)) effect = `request from ${who} (${out.role}) → not an authorization; the ledger waits for the clearance`;
   else if (out.role === 'PILOT') effect = `read-back by ${who} (PILOT) → no new authorization`;
   else if (acts.includes('STOP')) effect = `“stop” → STOP for ${(out.callsigns || []).map(s => s.toUpperCase()).join(', ') || '—'} → no runway-4 authorization added`;
   else effect = 'no runway instruction → no ledger change';
@@ -172,7 +173,7 @@ async function boot(){
   document.getElementById('hdr').textContent = `${scn.title} · ${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway} · reconstruction, NTSB DCA26MA161 (preliminary)`;
   document.getElementById('rwy').textContent = scn.runway;
   const mt = document.getElementById('modetag'); mt.className = MODE; mt.textContent = MODE === 'asis' ? 'AS-IS · NO CROSS-CHECK' : 'WITH GMAPS';
-  map.setCenter(scn.center); map.setZoom(scn.zoom);
+  map.setCenter(scn.center_v4 || scn.center); map.setZoom(scn.zoom_v4 || scn.zoom);  // v4 layout: strip on top, timeline at the bottom
   const kind = k => ({ type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === k) });
   map.addSource('tw', { type:'geojson', data: kind('taxiway') }); map.addSource('rw', { type:'geojson', data: kind('runway') }); map.addSource('hp', { type:'geojson', data: kind('holding_position') });
   map.addSource('active', { type:'geojson', data: { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } } });
@@ -208,7 +209,7 @@ function posAt(path, tt){ const bearing = (a, b) => { const r = x => x*Math.PI/1
   let i = path.findIndex(q => q.t >= tt); if (i <= 0) i = 1; if (i < 0) i = path.length - 1; const a = path[i-1], b = path[i]; const f = Math.max(0, Math.min(1, (tt - a.t) / ((b.t - a.t) || 1)));
   let k = i; while (k < path.length - 1 && path[k].p[0] === path[k-1].p[0] && path[k].p[1] === path[k-1].p[1]) k++;
   return { p: [a.p[0] + f*(b.p[0]-a.p[0]), a.p[1] + f*(b.p[1]-a.p[1])], b: bearing(path[k-1].p, path[k].p) }; }
-function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); document.getElementById('tlcap').className = ''; render(); }
+function reset(){ window.__frozen = false; t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); document.getElementById('tlcap').className = ''; render(); }
 function setCaption(text, cls){ const c = document.getElementById('caption'); c.textContent = text; c.className = text ? cls : ''; }
 function showCard(which, ms, then){
   const c = document.getElementById('card'); let html = null;
@@ -274,9 +275,9 @@ function render(){
     al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>${wall(scn.alert.t)} EDT · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div>` +
       `<div class="rwhy">WHY: RWY 4: landing clearance JAZZ 646 active (short final, ${la.lander_to_d_s} s to D) + crossing clearance TRUCK 1 at D (${la.truck_to_runway_s} s to runway) → overlap → ALERT (JO 7110.65 3-1-3, 3-7-2)</div><div style="color:var(--dim);margin-top:6px">${scn.alert.note}</div>`; }
   else { al.className = ''; ban.className = 'banner'; }
-  if (FREEZE != null && t >= FREEZE && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay();
-    setCaption(scn.captions[MODE], MODE === 'asis' ? 'red' : 'green');
-    if (MODE === 'gmaps'){ const tc = document.getElementById('tlcap'); tc.className = 'on'; tc.textContent = 'Alert at 23:37:04 — 8 s before the first “stop”, 18 s before Truck 1 entered runway 4. Whether that changes the outcome is for the NTSB to say.'; }
+  if (FREEZE != null && t >= FREEZE && !frozen){ frozen = true; window.__frozen = true; t = FREEZE; playing = false; setPlay();
+    if (MODE === 'asis') setCaption(scn.captions.asis, 'red');
+    else { const tc = document.getElementById('tlcap'); tc.className = 'on'; tc.textContent = 'Alert at 23:37:04 — 8 s before the first “stop”, 18 s before Truck 1 entered runway 4. Whether that changes the outcome is for the NTSB to say. Decision support only; the controller decides.'; }
     if (qs.get('autoplay') === '1') setTimeout(() => showCard('cost', CARD_MS, () => showCard('speed', CARD_MS, () => showCard('acc', CARD_MS, () => showCard('close', CARD_MS, () => setTimeout(() => window.__done = true, 300))))), 2 * CARD_MS);
     else setTimeout(() => window.__done = true, 500); }
   const now = performance.now();

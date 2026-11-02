@@ -49,8 +49,9 @@ def main():
             page.wait_for_timeout(1500)
             page.evaluate("() => document.getElementById('play').click()")
             # play in real time at 2x so the live calls land in the panel like in the clip
-            page.wait_for_function(f"() => parseFloat(document.getElementById('clock').textContent.split('=')[1]) >= {a.at - 0.05}", timeout=int(a.max_s * 1000), polling=100)
-            if "freeze" not in q:
+            # stop either where the page freezes itself (scenario freeze time) or just past --at
+            page.wait_for_function(f"() => window.__frozen === true || parseFloat(document.getElementById('clock').textContent.split('=')[1]) >= {a.at + 0.02}", timeout=int(a.max_s * 1000), polling=50)
+            if not page.evaluate("() => window.__frozen === true") and "freeze" not in q:
                 page.evaluate("() => document.getElementById('play').click()")
             page.wait_for_timeout(2500)  # last live call + caption settle
             page.screenshot(path=a.out)
