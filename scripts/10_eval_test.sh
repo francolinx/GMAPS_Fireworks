@@ -11,7 +11,7 @@
 # EXTRA='{"chat_template_kwargs":{"enable_thinking":false}}' for Qwen3 base models; JSON_MODE=1 if the server supports it.
 set -euo pipefail
 MODEL="${1:?model name as served}"; FEWSHOT="${2:-0}"; TAG="${3:-}"
-SAFE="$(echo "$MODEL" | tr '/:' '__')${TAG:+_$TAG}_fs$FEWSHOT"
+SAFE="${NAME:-$(echo "$MODEL" | tr '/:#' '___')${TAG:+_$TAG}}_fs$FEWSHOT"   # NAME=<short> overrides the file stem
 mkdir -p results/test
 test -f data/splits/test.jsonl || { echo "run bench/prepare_data.py first"; exit 1; }
 sha256sum data/splits/test.jsonl | awk '{print $1"  test.jsonl"}' | diff - data/splits/test.sha256 || { echo "TEST SET HASH MISMATCH — stop"; exit 1; }

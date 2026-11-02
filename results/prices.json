@@ -24,10 +24,6 @@
     "in": 0.2,
     "out": 0.2
   },
-  "FILL_ME_fireworks_lora_deployment_name": {
-    "in": 0.2,
-    "out": 0.2
-  },
   "atc-qwen3-8b": {
     "in": 0.0,
     "out": 0.0,
@@ -57,5 +53,10 @@
     "in": 2.0,
     "out": 10.0,
     "_note": "via OpenRouter"
+  },
+  "accounts/francolinjo-co18wqhx/models/atc-qwen3-8b-v2#accounts/francolinjo-co18wqhx/deployments/atc-eval": {
+    "in": 0.2,
+    "out": 0.2,
+    "_note": "Fireworks-hosted LoRA on qwen3-8b; priced at the serverless 4-16B tier list price (the on-demand H100 deployment used for the test run bills per GPU-hour instead)"
   }
 }

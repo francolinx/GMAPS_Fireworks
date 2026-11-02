@@ -27,6 +27,8 @@ LABELS = {  # model name → display name; the shot count is appended from the p
     "openai/gpt-5.6-luna": "GPT-5.6 Luna",
     "atc-qwen3-8b": "Qwen3-8B + LoRA (dry-run adapter, DGX Spark)",
     "qwen3-8b-base": "Qwen3-8B off the shelf (DGX Spark)",
+    "accounts/francolinjo-co18wqhx/models/atc-qwen3-8b-v2#accounts/francolinjo-co18wqhx/deployments/atc-eval": "Qwen3-8B + LoRA v2 (Fireworks SFT, hosted)",
+    "router:lora->opus": "Router: LoRA → Opus on weak outputs",
 }
 import re
 
