@@ -5,7 +5,7 @@
 
 Takes the OSM GeoJSON (from fetch_airport_osm.py), merges the runway segments for the chosen
 designator, finds a taxiway that crosses it, and emits a scenario the viewer (index.html) animates:
-  - SIM212 on final for the runway, touching down and rolling out
+  - MPL212 (Maple Air 212) on final for the runway, touching down and rolling out
   - RESCUE7 cleared to cross the same runway at the chosen taxiway (two branches: unresolved / hold short)
   - the radio transmissions with their parsed records (what the model produces) at the times they occur
   - the clearance-state timeline and the predicted runway-occupancy overlap window
@@ -106,6 +106,16 @@ def dist_along_to_point(poly, pt):
     return best
 
 
+def sub_poly(poly, s0, s1):
+    """Part of the polyline between along-distances s0 < s1, keeping its own vertices."""
+    out, acc = [along(poly, s0)], 0.0
+    for a, b in zip(poly, poly[1:]):
+        acc += dist(a, b)
+        if s0 < acc < s1: out.append(b)
+    out.append(along(poly, s1))
+    return out
+
+
 def sample_path(poly, t0, t1, n=40):
     """Evenly spaced (in distance) samples with linear time between t0 and t1."""
     L = poly_len(poly)
@@ -165,31 +175,60 @@ def main():
         crossing = min(named or crossings, key=lambda c: abs(c["d_along"] - rw_len * 0.55))
     X = crossing["point"]
     tw_ref = crossing["ref"] or "taxiway"
-    # crossing direction: approach from the side of the taxiway with more length (its first point), move through X
+    # Crosser path ON the OSM geometry: in along the connecting taxiway, onto the crossing taxiway, stop at the
+    # OSM holding position on that taxiway (else 75 m before the centreline), cross, stop short of the next runway.
     tw_line = crossing["line"]
-    # pick the taxiway endpoint farther from the runway as the start
-    far_pt = max([tw_line[0], tw_line[-1]], key=lambda p: dist(p, X))
-    tw_brg = bearing(far_pt, X)
-    hold_pt = destination(X, (tw_brg + 180) % 360, 75)   # hold line ~75 m from centerline
-    start_pt = destination(hold_pt, (tw_brg + 180) % 360, 250)  # taxiing in from 250 m out
-    entry_pt = destination(X, (tw_brg + 180) % 360, 30)  # runway edge
-    exit_pt = destination(X, tw_brg, 30)
-    beyond_pt = destination(X, tw_brg, 200)
+    sX = dist_along_to_point(tw_line, X)
+    hps = [f["geometry"]["coordinates"] for f in feats if f["properties"]["kind"] == "holding_position" and f["geometry"]["type"] == "Point"]
+    # approach from the end of the taxiway nearer to the crossing (the far side usually runs on to a parallel runway)
+    approach_from_start = sX < poly_len(tw_line) - sX
+    if not approach_from_start:
+        tw_line = tw_line[::-1]; sX = poly_len(tw_line) - sX
+    on_tw = [dist_along_to_point(tw_line, h) for h in hps if dist(along(tw_line, dist_along_to_point(tw_line, h)), h) < 3]
+    before = [s_ for s_ in on_tw if 40 < sX - s_ < 150]
+    s_hold = max(before) if before else sX - 75
+    hold_pt = along(tw_line, s_hold)
+    # stop beyond the crossing before reaching any other runway on this taxiway (or 200 m)
+    other = []
+    for f in feats:
+        if f["properties"]["kind"] != "runway" or f["geometry"]["coordinates"] is rw: continue
+        for a, b in zip(tw_line, tw_line[1:]):
+            for c, d in zip(f["geometry"]["coordinates"], f["geometry"]["coordinates"][1:]):
+                x = seg_intersect(a, b, c, d, lat0)
+                if x:
+                    s_ = dist_along_to_point(tw_line, x)
+                    if s_ > sX + 50: other.append(s_)
+    s_stop = min([sX + 200] + [s_ - 125 for s_ in other])
+    # lead-in: the taxiway joining the crossing taxiway's start (e.g. A at SFO), last 250 m of it
+    lead = []
+    for f in feats:
+        if f["properties"]["kind"] != "taxiway" or f["geometry"]["coordinates"] is crossing["line"]: continue
+        c = f["geometry"]["coordinates"]
+        if dist(c[-1], tw_line[0]) < 3: lead = c
+        elif dist(c[0], tw_line[0]) < 3: lead = c[::-1]
+        if lead: lead_ref = f["properties"].get("ref"); break
+    if lead:
+        Ll = poly_len(lead); lead = sub_poly(lead, max(0, Ll - 250), Ll)
+    approach_poly = lead[:-1] + sub_poly(tw_line, 0, s_hold) if lead else sub_poly(tw_line, max(0, s_hold - 250), s_hold)
+    cross_poly = sub_poly(tw_line, s_hold, s_stop)
+    edge = 30.0  # half runway width
     approach_start = destination(threshold, (rw_brg + 180) % 360, 4000)
     rollout_end = along(rw, min(rw_len - 100, max(crossing["d_along"] + 500, rw_len * 0.75)))
     rollout_poly = [threshold] + [p for p in rw[1:] if dist_along_to_point(rw, p) < dist_along_to_point(rw, rollout_end)] + [rollout_end]
 
     # --- timing (seconds) -------------------------------------------------------------------
     T_CLEAR_LAND, T_CROSS_CLR, T_ALERT, T_HOLD_SHORT = 0.0, 28.0, 28.0, 34.0
-    V_APP, V_ROLL_AVG, V_TAXI = 75.0, 45.0, 5.0
+    V_APP, V_ROLL_AVG = 75.0, 45.0
     t_touch = T_CLEAR_LAND + 4000 / V_APP                      # ~53 s
     t_roll_end = t_touch + poly_len(rollout_poly) / V_ROLL_AVG
     t_land_at_x = t_touch + crossing["d_along"] / V_ROLL_AVG   # lander reaches the intersection
-    d_start_to_hold = dist(start_pt, hold_pt)
-    t_at_hold = T_CROSS_CLR + d_start_to_hold / V_TAXI
-    t_enter = t_at_hold + dist(hold_pt, entry_pt) / V_TAXI
-    t_exit = t_enter + dist(entry_pt, exit_pt) / V_TAXI
-    t_clear = t_exit + dist(exit_pt, beyond_pt) / V_TAXI
+    # truck speed chosen so it reaches the runway centreline just as the lander does (the as-is collision geometry)
+    d_to_hold, d_hold_to_x = poly_len(approach_poly), sX - s_hold
+    V_TAXI = (d_to_hold + d_hold_to_x) / (t_land_at_x - 0.5 - T_CROSS_CLR)
+    t_at_hold = T_CROSS_CLR + d_to_hold / V_TAXI
+    t_enter = t_at_hold + (d_hold_to_x - edge) / V_TAXI
+    t_exit = t_at_hold + (d_hold_to_x + edge) / V_TAXI
+    t_clear = t_at_hold + poly_len(cross_poly) / V_TAXI
     lander_window = [round(t_land_at_x - 12, 1), round(t_land_at_x + 8, 1)]
     crosser_window = [round(t_enter, 1), round(t_exit, 1)]
     overlap = [max(lander_window[0], crosser_window[0]), min(lander_window[1], crosser_window[1])]
@@ -197,9 +236,9 @@ def main():
 
     lander_path = sample_path([approach_start, threshold], T_CLEAR_LAND, t_touch, 30) + \
                   sample_path(rollout_poly, t_touch, t_roll_end, 30)[1:]
-    crosser_unresolved = sample_path([start_pt, hold_pt], T_CROSS_CLR, t_at_hold, 20) + \
-                         sample_path([hold_pt, entry_pt, X, exit_pt, beyond_pt], t_at_hold, t_clear, 30)[1:]
-    crosser_resolved = sample_path([start_pt, hold_pt], T_CROSS_CLR, t_at_hold, 20) + \
+    crosser_unresolved = sample_path(approach_poly, T_CROSS_CLR, t_at_hold, 60) + \
+                         sample_path(cross_poly, t_at_hold, t_clear, 30)[1:]
+    crosser_resolved = sample_path(approach_poly, T_CROSS_CLR, t_at_hold, 60) + \
                        [{"t": round(t_clear + 60, 2), "p": hold_pt}]
 
     rw_num = " ".join({"0": "zero", "1": "one", "2": "two", "3": "three", "4": "four", "5": "five", "6": "six",
@@ -208,11 +247,11 @@ def main():
     rw_spoken = f"runway {rw_num}{side}"
     tw_spoken = " ".join(list(tw_ref.lower())) if len(tw_ref) <= 2 else tw_ref.lower()
     transmissions = [
-        {"t": T_CLEAR_LAND, "speaker": "TWR", "text": f"sim two one two {rw_spoken} cleared to land wind two niner zero at one two",
-         "parsed": {"role": "ATCO", "callsigns": ["sim two one two"], "commands": ["cleared to land"], "values": [rw_spoken, "wind two niner zero at one two"]},
+        {"t": T_CLEAR_LAND, "speaker": "TWR", "text": f"maple two one two {rw_spoken} cleared to land wind two niner zero at one two",
+         "parsed": {"role": "ATCO", "callsigns": ["maple two one two"], "commands": ["cleared to land"], "values": [rw_spoken, "wind two niner zero at one two"]},
          "actions": ["CLEARED_TO_LAND"]},
-        {"t": 4.0, "speaker": "SIM212", "text": f"cleared to land {rw_spoken} sim two one two",
-         "parsed": {"role": "PILOT", "callsigns": ["sim two one two"], "commands": ["cleared to land"], "values": [rw_spoken]},
+        {"t": 4.0, "speaker": "MPL212", "text": f"cleared to land {rw_spoken} maple two one two",
+         "parsed": {"role": "PILOT", "callsigns": ["maple two one two"], "commands": ["cleared to land"], "values": [rw_spoken]},
          "actions": ["CLEARED_TO_LAND"]},
         {"t": T_CROSS_CLR, "speaker": "GND", "text": f"rescue seven cross {rw_spoken} at {tw_spoken}",
          "parsed": {"role": "ATCO", "callsigns": ["rescue seven"], "commands": ["cross"], "values": [rw_spoken, f"at {tw_spoken}"]},
@@ -234,10 +273,11 @@ def main():
         "airport": args.airport, "runway": des, "crossing_taxiway": tw_ref,
         "attribution": "Geometry © OpenStreetMap contributors (ODbL). Fictional traffic.",
         "center": [(threshold[0] + far_end[0]) / 2, (threshold[1] + far_end[1]) / 2],
-        "runway_line": rw, "intersection": X, "hold_point": hold_pt,
+        "runway_line": rw, "intersection": X, "hold_point": hold_pt, "crossing_path": approach_poly + cross_poly[1:],
+        "actors": {"MPL212": "MPL212 — Maple Air 212, short final " + des, "RESCUE7": "RESCUE 7 — ARFF fire truck"},
         "alert": {
             "t": T_ALERT, "id": "w0001", "rule": "R1 crossing vs active landing",
-            "text": f"POSSIBLE CONFLICT — {des}: SIM212 cleared to land vs RESCUE7 cleared to cross at {tw_ref}",
+            "text": f"POSSIBLE CONFLICT — {des}: MPL212 cleared to land vs RESCUE 7 cleared to cross at {tw_ref}",
             "lookahead": {"lander_at_intersection": round(t_land_at_x, 1), "lander_window": lander_window,
                           "crosser_window": crosser_window, "overlap": overlap},
             "cites": ["JO 7110.65 3-1-3", "JO 7110.65 3-7-2"],
@@ -245,18 +285,19 @@ def main():
         },
         "variants": {
             "unresolved": {"transmissions": transmissions,
-                           "aircraft": [{"id": "SIM212", "kind": "airliner", "path": lander_path},
-                                        {"id": "RESCUE7", "kind": "vehicle", "path": crosser_unresolved}]},
+                           "aircraft": [{"id": "MPL212", "kind": "airliner", "label": f"MPL212 — Maple Air 212, short final {des}", "path": lander_path},
+                                        {"id": "RESCUE7", "kind": "vehicle", "label": "RESCUE 7 — ARFF fire truck", "path": crosser_unresolved}]},
             "resolved": {"transmissions": transmissions + resolved_extra,
-                         "aircraft": [{"id": "SIM212", "kind": "airliner", "path": lander_path},
-                                      {"id": "RESCUE7", "kind": "vehicle", "path": crosser_resolved}]},
+                         "aircraft": [{"id": "MPL212", "kind": "airliner", "label": f"MPL212 — Maple Air 212, short final {des}", "path": lander_path},
+                                      {"id": "RESCUE7", "kind": "vehicle", "label": "RESCUE 7 — ARFF fire truck", "path": crosser_resolved}]},
         },
         "duration": round(max(t_roll_end, t_clear) + 5, 1),
     }
     json.dump(scenario, open(args.out, "w"))
     print(f"runway {des}: {rw_len:.0f} m, heading {rw_brg:.0f}°; crossing at taxiway {tw_ref} "
           f"{crossing['d_along']:.0f} m from threshold; touchdown t={t_touch:.0f}s, lander at crossing t={t_land_at_x:.0f}s, "
-          f"crosser on runway {crosser_window}; overlap {overlap}")
+          f"crosser on runway {crosser_window}; overlap {overlap}; truck {V_TAXI:.1f} m/s via {lead_ref if lead else '-'}→{tw_ref}, "
+          f"hold {sX - s_hold:.0f} m before centreline, stop {s_stop - sX:.0f} m beyond")
     print(f"wrote {args.out}")
 
 
