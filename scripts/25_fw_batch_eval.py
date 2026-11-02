@@ -39,7 +39,7 @@ def cmd_submit(a):
         tmp.write(json.dumps({"custom_id": r["id"], "body": {"messages": build_messages(system, shots, r),
                                                                "max_tokens": a.max_tokens, "temperature": 0.0, **extra}}, ensure_ascii=False) + "\n")
     tmp.close()
-    rid = a.tag.replace("_", "-").lower()          # Fireworks resource ids: lower-case letters, digits, hyphens
+    rid = (a.tag.replace("_", "-").lower() + f"-fs{a.fewshot}")   # Fireworks resource ids: lower-case letters, digits, hyphens; shot count keeps ids unique
     ds_in, ds_out = f"{rid}-in", f"{rid}-out"
     for did in (ds_in,):
         try:
