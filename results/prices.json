@@ -88,5 +88,25 @@
     "in": 0.5,
     "out": 0.5,
     "_note": "our LoRA on Nemotron-3.5-Lightning-30B-A3B, Fireworks batch; same tier"
+  },
+  "openai/gpt-6.1-terra-pro": {
+    "in": 1.0,
+    "out": 5.0,
+    "_note": "OpenRouter list price, 2026-11-02"
+  },
+  "google/gemini-4-argon": {
+    "in": 2.0,
+    "out": 10.0,
+    "_note": "OpenRouter list price, 2026-11-02"
+  },
+  "accounts/francolinjo-co18wqhx/models/atc-nemotron-nano-30b-v2": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "our 3-epoch LoRA on Nemotron-3-Nano-30B-A3B, Fireworks batch; MoE 0-56B tier"
+  },
+  "accounts/francolinjo-co18wqhx/models/atc-nemotron-lightning-30b-v2": {
+    "in": 0.5,
+    "out": 0.5,
+    "_note": "our 3-epoch LoRA on Nemotron-3.5-Lightning-30B-A3B, Fireworks batch; MoE 0-56B tier"
   }
 }

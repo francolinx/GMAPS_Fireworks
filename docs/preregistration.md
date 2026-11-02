@@ -65,3 +65,13 @@ equivalent of the `enable_thinking: false` every Qwen3 arm already had. Because 
 both versions are kept in `results/test/` and both are in the README table; the reasoning-off version is the one in the
 headline. The primary pre-registered comparison (Qwen3-8B before→after) is unchanged by this addendum. The Nemotron-vs-Opus
 comparison is reported with the two-test rule and is a tie (+2.8, [−2.0, +7.4], p = 0.30).
+
+## Addendum 4 — Nov 2, 13:55 PT (the single pre-registered revision: a training change, logged before any result)
+
+The one allowed revision is a **training change**: the same recipe (LoRA r16/α32, lr 1e-4, max 2,048 tokens, mix v2) for
+**three epochs instead of one** on both Nemotron bases — jobs `yu3izojq` (Nemotron-3-Nano-30B-A3B) and `d6d7yktb`
+(Nemotron-3.5-Lightning-30B-A3B), launched 13:52 PT. Motivation on record: the Qwen3-8B arm gained +4.5 (n.s.) from 1 → 3
+epochs. Decision rule unchanged (McNemar + recording bootstrap, both must pass). The 1-epoch rows stay in the table whatever
+happens; if the 3-epoch adapters are worse, that is reported too. No prompt, data, scorer or arm change. Two additional
+frontier reference arms were also queued at the same time with the standard 5-shot prompt: `openai/gpt-6.1-terra-pro` and
+`google/gemini-4-argon` (the newest OpenAI and Google models on OpenRouter as of today); reference only, not graded.
