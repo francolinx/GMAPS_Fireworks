@@ -269,6 +269,7 @@ function render(){
   if (crossing) rows.push(`<tr><td>4</td><td>cross at D</td><td style="color:#ffb13b">TRUCK 1</td><td class="${alertOn ? 'bad' : 'warn'}">${alertOn ? 'CONFLICT' : 'valid'}</td></tr>`);
   document.getElementById('statebody').innerHTML = rows.join('') || '<tr><td colspan=4 style="color:var(--dim)">no active authorizations</td></tr>';
   const al = document.getElementById('alert'), ban = document.getElementById('banner');
+  document.getElementById('lookahead').style.visibility = (MODE === 'asis' || alertOn) ? 'visible' : 'hidden';
   if (alertOn){ al.className = 'on'; ban.className = 'banner on'; const la = scn.alert.lookahead;
     al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>${wall(scn.alert.t)} EDT · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div>` +
       `<div class="rwhy">WHY: RWY 4: landing clearance JAZZ 646 active (short final, ${la.lander_to_d_s} s to D) + crossing clearance TRUCK 1 at D (${la.truck_to_runway_s} s to runway) → overlap → ALERT (JO 7110.65 3-1-3, 3-7-2)</div><div style="color:var(--dim);margin-top:6px">${scn.alert.note}</div>`; }
