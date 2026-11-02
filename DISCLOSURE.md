@@ -51,3 +51,13 @@ responsible for the implementation and the reported results.
 | Mix filter | `scripts/12_filter_sft.py` | drops UNKNOWN-role training rows |
 | Router | `scripts/13_router.py` | post-processing confidence router over two prediction files (written 08:10, first run during the build period) |
 | Plan | `MONDAY.md` | build-day run book |
+
+### Added Nov 2, 08:10–09:20 PT (cloud session, before the build period)
+| Area | Files | What it is |
+|---|---|---|
+| Teacher test | `results/dev/openai_gpt-5.6-luna_fs5.dev.preds.jsonl` | GPT-5.6 Luna on dev (teacher candidate) |
+| Pseudo-labels v2 | `data/pseudo/*.luna.preds.jsonl` (gitignored) | 8,000 external rows labelled by GPT-5.6 Luna, 12-shot from train; validated by `scripts/03_pseudo_label.py` |
+| Role fill | `data/pseudo/train_unk_roles.json` (gitignored), `scripts/04_build_sft_mix.py --role-fill` | Claude Opus 5.5 assigned speaker roles to the 95 UNKNOWN-role gold train rows (spans stay gold; training only) |
+| Scorer rule | `bench/normalize.py`, `bench/score.py` | ACK/OTHER excluded from action sets; guard rules; fixed before any test run |
+| Fireworks route | `scripts/15_fireworks_sft.py` | dataset upload / SFT / status / deploy via the Python SDK |
+| Docs | `scripts/14_results_md.py`, `docs/video_script.md`, `viz/export_transmissions.py`, `viz/import_outputs.py` | results tables generator, video script, viz wiring |

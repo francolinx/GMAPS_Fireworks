@@ -13,6 +13,8 @@ Rules baked in:
   - every text is deduplicated across sources (first source wins: gold > synthetic > pseudo)
   - any row whose text equals a dev/test text is dropped
   - the gold ATCO2 train rows are up-weighted (--gold-repeat) so real phraseology dominates
+  - --role-fill replaces UNKNOWN speaker roles in gold rows with teacher-assigned roles (spans stay gold); rows the
+    teacher also calls UNKNOWN are dropped later by scripts/12_filter_sft.py
 """
 import argparse, collections, json, os, random, sys
 
@@ -38,6 +40,7 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--dev-out", required=True)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--role-fill", help="json {id: ATCO|PILOT} to replace UNKNOWN roles in gold rows (teacher-assigned, training only)")
     args = ap.parse_args()
     for p in [args.gold, args.dev] + args.synthetic + args.pseudo:
         if "test" in os.path.basename(p):
@@ -70,6 +73,12 @@ def main():
         comp[label] += n
 
     gold = load(args.gold)
+    if args.role_fill:
+        fill = json.load(open(args.role_fill)); filled = 0
+        for r in gold:
+            if r.get("role") == "UNKNOWN" and r["id"] in fill:
+                r["role"] = fill[r["id"]]; filled += 1
+        print(f"role-fill: {filled} UNKNOWN gold roles replaced from {args.role_fill}")
     take(gold, "gold_atco2")
     for p in args.synthetic:
         take(load(p), "synthetic_us", args.max_synth)
