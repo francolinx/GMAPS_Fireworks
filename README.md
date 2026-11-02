@@ -55,6 +55,8 @@
 
 ![Before → after: the same recipe on three open models, next to the frontier](docs/before_after.png)
 
+![Leaderboard: every arm on the frozen test split, our fine-tuned rows highlighted](docs/leaderboard.png)
+
 ![Every arm on the frozen test split](docs/results_full_record.png)
 
 **Leaderboard** — every system on the same 288 rows, sorted; paired verdict vs the off-the-shelf baseline (McNemar + recording bootstrap, both must pass); cost = list price × the tokens the run actually used (`scripts/28_leaderboard.py`):
