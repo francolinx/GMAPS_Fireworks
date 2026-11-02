@@ -16,7 +16,7 @@ Works unchanged for the closed baseline and the open models:
   # local vLLM / llama.cpp on the Spark
   BASE_URL=http://spark-6771:8000/v1 API_KEY=none python bench/infer.py --model <served-name> ...
 
-Few-shot examples come from the DEV split (never test) and are identical for every arm.
+Few-shot examples come from the TRAIN split (never the split being scored) and are identical for every arm.
 Latency is wall-clock per request, measured client-side, same machine for every arm.
 """
 import argparse, json, os, sys, time, urllib.request, urllib.error
@@ -72,11 +72,11 @@ def call(base_url, api_key, payload, timeout, retries=3):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
-    ap.add_argument("--split", default="data/splits/test.jsonl")
+    ap.add_argument("--split", default="data/splits/dev.jsonl", help="pass data/splits/test.jsonl explicitly for the frozen test run")
     ap.add_argument("--out", required=True)
     ap.add_argument("--system", default="prompts/system.txt")
     ap.add_argument("--fewshot", type=int, default=0, help="N examples from --fewshot-from (dev split)")
-    ap.add_argument("--fewshot-from", default="data/splits/dev.jsonl")
+    ap.add_argument("--fewshot-from", default="data/splits/train.jsonl", help="few-shot pool; never the split being scored")
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--max-tokens", type=int, default=300)
     ap.add_argument("--temperature", type=float, default=0.0)

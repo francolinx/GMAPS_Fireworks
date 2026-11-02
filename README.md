@@ -15,9 +15,10 @@ another aircraft was just cleared to land on.
 **Intended user.** Tower supervisors and ATC training programs (decision support only; the controller decides).
 
 **Why a small open model.** A tower frequency produces a transmission every few seconds, 24/7. The parser
-must be sub-second, cheap enough to run continuously on every frequency, and able to run on local hardware
-(a DGX Spark in the tower) with no internet dependency. Closed frontier models are too slow and too
-expensive per transmission for this workload, and cannot run on-prem.
+must keep up with every frequency at once, cost almost nothing per transmission, and be able to run on local
+hardware in the tower (a DGX Spark) with no internet dependency. Closed frontier models cannot run on-prem and
+cost orders of magnitude more per transmission. Latency is reported as measured for each deployment (hosted
+on Fireworks vs. local on the Spark); see Results.
 
 **Approach.** TODO (Monday): prompted frontier baseline → prompted open base → LoRA fine-tuned open model
 on Fireworks (and/or Nemotron on DGX Spark) → optional confidence router.

@@ -97,6 +97,7 @@ def score_file(gold_rows, pred_path, prices):
     full_exact = 0
     lat, ptok, ctok = [], 0, 0
     missing = 0
+    per_row = []   # one record per gold row: the pieces every aggregate metric is built from
 
     for g in gold_rows:
         p = preds.get(g["id"])
@@ -109,7 +110,8 @@ def score_file(gold_rows, pred_path, prices):
                 lat.append(float(p["latency_ms"]))
             ptok += int(p.get("prompt_tokens") or 0)
             ctok += int(p.get("completion_tokens") or 0)
-        if d is not None:
+        parsed_ok = d is not None
+        if parsed_ok:
             valid += 1
         d = d or {}
 
@@ -148,6 +150,14 @@ def score_file(gold_rows, pred_path, prices):
 
         cs_ok = collections.Counter(gold_ents["callsign"]) == collections.Counter(pred_ents["callsign"])
         full_exact += (cs_ok and a_ok and r_ok)
+        per_row.append({
+            "valid": parsed_ok,
+            "cs": multiset_counts(gold_ents["callsign"], pred_ents["callsign"]),
+            "act": (tp, fp, fn), "a_ok": a_ok,
+            "crit": (gc == pc) if gc else None,
+            "role": r_ok if g.get("role") in ("ATCO", "PILOT") else None,
+            "full": bool(cs_ok and a_ok and r_ok),
+        })
 
     price = (prices or {}).get(model_name or "", None)
     cost_total = None
@@ -178,8 +188,57 @@ def score_file(gold_rows, pred_path, prices):
         "prompt_tokens": ptok, "completion_tokens": ctok,
         "cost_usd_total": cost_total,
         "cost_usd_per_1k_segments": (cost_total / n * 1000) if cost_total is not None else None,
+        "_rows": per_row,
     }
     return out
+
+
+BOOT_METRICS = ("callsign_f1", "action_f1", "action_exact", "runway_critical_exact", "role_acc", "full_record_exact")
+
+
+def aggregate(rows):
+    """Recompute the headline metrics from a list of per-row records (used by the bootstrap)."""
+    n = len(rows) or 1
+    cs = [sum(r["cs"][i] for r in rows) for i in range(3)]
+    act = [sum(r["act"][i] for r in rows) for i in range(3)]
+    crit = [r["crit"] for r in rows if r["crit"] is not None]
+    role = [r["role"] for r in rows if r["role"] is not None]
+    return {
+        "callsign_f1": prf(*cs)[2], "action_f1": prf(*act)[2],
+        "action_exact": sum(r["a_ok"] for r in rows) / n,
+        "runway_critical_exact": (sum(crit) / len(crit)) if crit else None,
+        "role_acc": (sum(role) / len(role)) if role else None,
+        "full_record_exact": sum(r["full"] for r in rows) / n,
+    }
+
+
+def bootstrap(results, iters=2000, seed=0):
+    """Row-resampled 95% CIs per arm, and PAIRED CIs for (arm − first arm) on the same resampled rows."""
+    import random
+    rng = random.Random(seed)
+    n = len(results[0]["_rows"])
+    samples = {i: {m: [] for m in BOOT_METRICS} for i in range(len(results))}
+    diffs = {i: {m: [] for m in BOOT_METRICS} for i in range(1, len(results))}
+    for _ in range(iters):
+        idx = [rng.randrange(n) for _ in range(n)]
+        aggs = [aggregate([res["_rows"][j] for j in idx]) for res in results]
+        for i, a in enumerate(aggs):
+            for m in BOOT_METRICS:
+                if a[m] is not None:
+                    samples[i][m].append(a[m])
+                    if i > 0 and aggs[0][m] is not None:
+                        diffs[i][m].append(a[m] - aggs[0][m])
+
+    def ci(v):
+        if not v:
+            return None
+        v = sorted(v)
+        return [v[int(0.025 * (len(v) - 1))], v[int(0.975 * (len(v) - 1))]]
+    for i, res in enumerate(results):
+        res["ci95"] = {m: ci(samples[i][m]) for m in BOOT_METRICS}
+        if i > 0:
+            res["delta_vs_first"] = {m: {"delta": (res[m] - results[0][m]) if res[m] is not None and results[0][m] is not None else None,
+                                         "ci95": ci(diffs[i][m])} for m in BOOT_METRICS}
 
 
 def fmt(v, kind="pct"):
@@ -200,6 +259,7 @@ def main():
     ap.add_argument("preds", nargs="+")
     ap.add_argument("--prices", help="json: {model: {in: $/M, out: $/M}}")
     ap.add_argument("--out", help="write metrics json here")
+    ap.add_argument("--bootstrap", type=int, default=2000, help="bootstrap iterations for 95%% CIs (0 to skip)")
     args = ap.parse_args()
 
     gold = [json.loads(l) for l in open(args.gold, encoding="utf-8") if l.strip()]
@@ -224,9 +284,28 @@ def main():
         if r["missing"]:
             print(f"WARNING: {r['file']} is missing {r['missing']} of {r['n']} ids — scored as empty")
 
+    if args.bootstrap and results and results[0]["_rows"]:
+        bootstrap(results, iters=args.bootstrap)
+        labels = {"callsign_f1": "Callsign F1", "action_f1": "Action F1", "action_exact": "Action exact",
+                  "runway_critical_exact": "Runway-critical exact", "role_acc": "Role acc", "full_record_exact": "Full record exact"}
+        print(f"\n95% CIs (row bootstrap, {args.bootstrap} iters); Δ is paired vs. {results[0]['model']}:\n")
+        print("| Metric | " + " | ".join(str(r["model"]) for r in results) + " |")
+        print("|---|" + "---|" * len(results))
+        for m in BOOT_METRICS:
+            cells = []
+            for i, r in enumerate(results):
+                c = r["ci95"].get(m)
+                cell = "—" if r.get(m) is None or not c else f"{pct(r[m])} [{pct(c[0])}, {pct(c[1])}]"
+                if i > 0 and r.get("delta_vs_first", {}).get(m, {}).get("ci95"):
+                    d = r["delta_vs_first"][m]
+                    cell += f" Δ{100 * d['delta']:+.1f} [{100 * d['ci95'][0]:+.1f}, {100 * d['ci95'][1]:+.1f}]"
+                cells.append(cell)
+            print(f"| {labels[m]} | " + " | ".join(cells) + " |")
+        print("\nA Δ interval that excludes 0 is a difference the test set supports; one that straddles 0 is a tie.")
+
     if args.out:
         os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-        json.dump(results, open(args.out, "w"), indent=2)
+        json.dump([{k: v for k, v in r.items() if k != "_rows"} for r in results], open(args.out, "w"), indent=2)
         print(f"wrote {args.out}")
 
 
