@@ -13,7 +13,35 @@
    "truck one and company"
   ]
  },
+ "atc-nemotron-nano-30b-v1": {
+  "alert_t": 124,
+  "clock": "23:37:04",
+  "lead_over_controller_s": 8,
+  "lead_over_truck_s": 18,
+  "landing_seen": [
+   7,
+   "jazz six four six"
+  ],
+  "crossing_seen": [
+   124,
+   "truck one and company"
+  ]
+ },
  "nemotron-lightning-30b-base": {
+  "alert_t": 124,
+  "clock": "23:37:04",
+  "lead_over_controller_s": 8,
+  "lead_over_truck_s": 18,
+  "landing_seen": [
+   7,
+   "jazz six four six"
+  ],
+  "crossing_seen": [
+   124,
+   "truck one and company"
+  ]
+ },
+ "nemotron-nano-30b-base": {
   "alert_t": 124,
   "clock": "23:37:04",
   "lead_over_controller_s": 8,
