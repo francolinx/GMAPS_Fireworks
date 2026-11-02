@@ -2,7 +2,7 @@
 
 **Fireworks: Deploy buildathon with Microsoft & NVIDIA · Nov 2, 2026 · San Francisco**
 
-![GMAPS runway monitor — KSFO 28L, SIM212 cleared to land, RESCUE7 cleared to cross at E](docs/runway_monitor_sfo_28l.png)
+![GMAPS runway monitor — KSFO 28L: MPL212 cleared to land, RESCUE 7 cleared to cross at E; the alert, the hold-short, and the live parser running on the DGX Spark](docs/runway_monitor_sfo_28l_gmaps.png)
 
 **One sentence.** On 288 real tower transmissions from three airports it never saw, a one-epoch LoRA on NVIDIA's open Nemotron-3-Nano-30B-A3B goes from **39.2% to 70.1%** full-record accuracy and **ties Claude Opus 5.5 (67.4%; paired Δ +2.8, 95% CI [−2.0, +7.4])** at ~1/45th the per-transmission cost; the pre-registered 8B arm (Qwen3-8B) goes from **42.4% to 59.7% (+17.4 [+10.5, +24.5], p = 7 × 10⁻⁷)** and answers in 0.7 s hosted — both are open weights that can run inside the tower on a DGX Spark with no internet.
 
