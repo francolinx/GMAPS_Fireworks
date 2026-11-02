@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GMAPS Runway Monitor</title>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  :root{--bg:#070b16;--panel:#0e1526;--line:#1d2a44;--txt:#d7e0f2;--dim:#7f8cab;--cyan:#39d0ff;--amber:#ffb13b;--red:#ff3b5c;--green:#3ddc84;--nv:#76b900;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #app{display:grid;grid-template-columns:350px 1fr 350px;grid-template-rows:48px 1fr 56px;height:100%}
+  header{grid-column:1/4;display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:15px;margin:0;letter-spacing:.08em;font-family:var(--mono)} header .sub{color:var(--dim);font-family:var(--mono);font-size:12px}
+  header .spacer{flex:1} header button,header select{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-family:var(--mono);cursor:pointer}
+  #modetag{font-family:var(--mono);font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.08em}
+  #modetag.asis{background:#3a1420;color:var(--red)} #modetag.gmaps{background:#0d2a1a;color:var(--green)}
+  #radio,#right{background:var(--panel);overflow:auto;padding:12px;border-right:1px solid var(--line)} #right{border-right:0;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:6px;overflow:hidden}
+  #state{flex:0 0 auto} #spark{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:10px}
+  #map{position:relative} #map .maplibregl-ctrl-attrib{font-size:10px}
+  h2{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:4px 0 10px;font-family:var(--mono)}
+  .actors{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:11px;background:#0b1222}
+  .actors div{margin:2px 0} .actors .ac{color:var(--cyan)} .actors .veh{color:var(--amber)}
+  .tx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#0b1222;animation:in .25s ease-out}
+  .tx .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim)} .tx .spk{color:var(--cyan)} .tx .spk.veh{color:var(--amber)} .tx .spk.atc{color:#c9d1e3}
+  .tx .text{margin:4px 0 6px;font-style:italic} .tx pre{margin:0;font-family:var(--mono);font-size:11px;color:#a9b8d8;white-space:pre-wrap}
+  .chips{margin-top:6px} .chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;background:#1a2a4a;color:var(--cyan);margin-right:4px}
+  .chip.crit{background:#3a1420;color:var(--red)} .chip.norule{background:#1b1f2b;color:var(--dim)}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px} td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{color:var(--dim);font-weight:500}
+  .ok{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)}
+  #alert{display:none;margin-top:10px;border:1px solid var(--red);background:#2a0d16;border-radius:8px;padding:10px;font-family:var(--mono);font-size:12px}
+  #alert.on{display:block;animation:pulse 1s infinite} @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,92,.0)}50%{box-shadow:0 0 0 6px rgba(255,59,92,.25)}}
+  #alert .big{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px} #alert .note{color:var(--dim);margin-top:6px}
+  #spark .hd{font-family:var(--mono);font-size:11px;line-height:1.5} #spark .hd b{color:var(--nv)} #spark .gpu{color:var(--nv)}
+  #spark .stats{font-family:var(--mono);font-size:11px;color:var(--txt);margin:4px 0 6px}
+  #livelist{overflow:auto;flex:1 1 auto;min-height:0}
+  .call{border:1px solid #23361a;border-radius:6px;padding:5px 8px;margin-bottom:6px;background:#0c160c;font-family:var(--mono);font-size:10.5px;animation:in .25s ease-out}
+  .call .m{display:flex;justify-content:space-between;color:var(--dim)} .call .ms{color:var(--nv);font-weight:700} .call pre{margin:3px 0 0;white-space:pre-wrap;color:#cfe8b8}
+  .call .match{color:var(--green)} .call .diff{color:var(--amber)} .call.pending{opacity:.6}
+  footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  footer input[type=range]{flex:1} footer button{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono)}
+  #clock{min-width:90px;color:var(--cyan)}
+  .banner{position:absolute;left:50%;top:52px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:5}
+  .banner.on{display:block}
+  #caption{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;max-width:86%;padding:10px 18px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:15px;line-height:1.45;letter-spacing:.03em;display:none;z-index:6;text-align:center}
+  #caption.red{display:block;background:rgba(120,10,30,.92);border:2px solid var(--red);color:#fff}
+  #caption.green{display:block;background:rgba(8,60,32,.92);border:2px solid var(--green);color:#eafff1}
+  #card{position:fixed;inset:0;z-index:50;background:#05080f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:60px;text-align:center;font-family:var(--mono)}
+  #card.on{display:flex} #card .c1{font-size:40px;font-weight:700;color:#eef2ff;letter-spacing:.04em} #card .c2{font-size:21px;color:#b7c3dd;max-width:1100px}
+  .tx .wording{font-family:var(--mono);font-size:10px;color:var(--amber);margin:-2px 0 6px} #clock .wall{font-size:16px;font-weight:700;color:#eef2ff;margin-right:10px}
+  #clock{min-width:260px}
+  #livecap{position:absolute;left:12px;top:12px;z-index:6;font-family:var(--mono);font-size:12px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:5px 10px;border-radius:6px;display:none}
+</style>
+</head>
+<body>
+<div id="card"></div>
+<div id="app">
+  <header>
+    <h1>GMAPS · RUNWAY MONITOR</h1><span class="sub" id="hdr">loading…</span>
+    <span class="spacer"></span>
+    <span id="modetag"></span>
+    <label class="sub">variant</label>
+    <select id="variant"><option value="unresolved">unresolved</option><option value="resolved">hold-short issued</option></select>
+    <label class="sub">speed</label>
+    <select id="speed"><option>1</option><option selected>2</option><option>4</option><option>8</option></select>
+  </header>
+  <aside id="radio"><h2>RADIO · TRANSCRIPT → PARSED RECORD</h2><div class="actors" id="actors"></div><div id="txlist"></div></aside>
+  <div id="map"><div class="banner" id="banner">POSSIBLE CONFLICT</div><div id="livecap"></div><div id="caption"></div></div>
+  <aside id="right">
+    <div id="state">
+      <h2>CLEARANCE STATE</h2>
+      <table><thead><tr><th>rwy</th><th>authorization</th><th>who</th><th>status</th></tr></thead><tbody id="statebody"></tbody></table>
+      <div id="alert"></div>
+      <h2 style="margin-top:12px">LOOK-AHEAD</h2>
+      <table id="lookahead"></table>
+    </div>
+    <div id="spark">
+      <h2>DGX SPARK · LIVE PARSER</h2>
+      <div class="hd" id="sparkhd">proxy offline — start <code>python3 viz/live_server.py</code> and open <code>:8090/?live=1</code></div>
+      <div class="stats" id="sparkstats"></div>
+      <div id="livelist"></div>
+    </div>
+  </aside>
+  <footer>
+    <button id="play">▶ play</button><button id="restart">↺</button>
+    <span id="clock">t = 0.0 s</span>
+    <input type="range" id="scrub" min="0" max="100" step="0.1" value="0">
+    <span class="sub" id="attrib">© OpenStreetMap contributors</span>
+  </footer>
+</div>
+<script>
+const qs = new URLSearchParams(location.search);
+let GEO = qs.get('geo');
+const SCN = qs.get('scenario') || 'scenario_sfo_sim1.json';
+// mode=asis: transmissions are parsed but no rule runs (today's tower); mode=gmaps (default): the conflict engine runs.
+const MODE = qs.get('mode') === 'asis' ? 'asis' : 'gmaps';
+let FREEZE = qs.has('freeze') ? parseFloat(qs.get('freeze')) : null;
+const CARD_MS = parseFloat(qs.get('cardms') || 3000);
+const LIVE = qs.get('live') === '1';
+const CRIT = new Set(['CLEARED_TO_LAND','CLEARED_FOR_TAKEOFF','LINE_UP_AND_WAIT','HOLD_SHORT','HOLD_POSITION','CROSS_RUNWAY','BACKTRACK','TOUCH_AND_GO','VACATE_RUNWAY','GO_AROUND']);
+const FACILITY = { TWR: 'san francisco tower', GND: 'san francisco ground' };
+let geo, scn, variant = qs.get('variant') || 'unresolved', t = 0, playing = false, speed = parseFloat(qs.get('speed') || 2), last = null, shown = new Set();
+let lastMapT = -1, lastMapAt = 0, lastConflict = null, frozen = false;
+window.__done = false; window.__live = [];
+document.getElementById('variant').value = variant; document.getElementById('speed').value = String(speed);
+const mt = document.getElementById('modetag'); mt.className = MODE; mt.textContent = MODE === 'asis' ? 'AS-IS · NO CROSS-CHECK' : 'WITH GMAPS';
+
+function iconCanvas(kind, color){
+  const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d');
+  g.fillStyle = color; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
+  if (kind === 'vehicle'){ g.rect(12,12,24,24); } else { g.moveTo(24,4); g.lineTo(42,40); g.lineTo(24,32); g.lineTo(6,40); g.closePath(); }
+  g.fill(); g.stroke(); return g.getImageData(0,0,48,48);
+}
+function posAt(path, tt){
+  if (tt <= path[0].t) return {p: path[0].p, b: bearing(path[0].p, path[1].p)};
+  for (let i = 1; i < path.length; i++){
+    if (tt <= path[i].t){ const a = path[i-1], b = path[i]; const f = (b.t - a.t) ? (tt - a.t)/(b.t - a.t) : 1;
+      const dir = (a.p[0] === b.p[0] && a.p[1] === b.p[1]) ? bearing(path[i-2 >= 0 ? i-2 : 0].p, a.p) : bearing(a.p, b.p);
+      return {p:[a.p[0] + f*(b.p[0]-a.p[0]), a.p[1] + f*(b.p[1]-a.p[1])], b: dir}; }
+  }
+  const n = path.length; let k = n - 1; while (k > 0 && path[k-1].p[0] === path[n-1].p[0] && path[k-1].p[1] === path[n-1].p[1]) k--;
+  return {p: path[n-1].p, b: bearing(path[Math.max(0, k-1)].p, path[k].p)};
+}
+function bearing(a, b){ const toR = x => x*Math.PI/180; const y = Math.sin(toR(b[0]-a[0]))*Math.cos(toR(b[1]));
+  const x = Math.cos(toR(a[1]))*Math.sin(toR(b[1])) - Math.sin(toR(a[1]))*Math.cos(toR(b[1]))*Math.cos(toR(b[0]-a[0]));
+  return (Math.atan2(y,x)*180/Math.PI + 360) % 360; }
+const actorName = id => (scn && scn.actors && scn.actors[id]) || id;
+const shortName = id => (scn && scn.actor_short && scn.actor_short[id]) || ({ MPL212: 'MPL212', RESCUE7: 'RESCUE 7' })[id] || id;
+const landerId = () => scn.variants[variant].aircraft.find(a => a.kind !== 'vehicle').id;
+const crosserId = () => scn.variants[variant].aircraft.find(a => a.kind === 'vehicle').id;
+function wall(tt){ if (!scn || !scn.clock0) return ''; let s = scn.clock0[0]*3600 + scn.clock0[1]*60 + scn.clock0[2] + Math.floor(tt); const p = n => String(n).padStart(2,'0'); return `${p(Math.floor(s/3600)%24)}:${p(Math.floor(s/60)%60)}:${p(s%60)}`; }
+
+const map = new maplibregl.Map({ container: 'map', center: [-122.375, 37.619], zoom: 13.6, pitch: 0, attributionControl: false,
+  style: { version: 8, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b16' } }] } });
+map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap contributors (ODbL) · fictional traffic' }));
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+map.on('load', async () => {
+  scn = await fetch(SCN).then(r => r.json());
+  GEO = GEO || scn.geo || (scn.airport === 'KLGA' ? 'klga.geojson' : 'ksfo.geojson');
+  geo = await fetch(GEO).then(r => r.json());
+  document.getElementById('hdr').textContent = `${scn.title ? scn.title + ' · ' : ''}${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway}`;
+  if (FREEZE == null && scn.freeze) FREEZE = scn.freeze[MODE];
+  const atcLine = scn.airport === 'KLGA' ? 'LGA TOWER · local controller, transmitting on tower and ground' : 'TWR / GND · San Francisco tower / ground';
+  document.getElementById('actors').innerHTML = `<div class="ac">▲ ${actorName(landerId())}</div><div class="veh">■ ${actorName(crosserId())}</div><div style="color:var(--dim)">${atcLine}</div>`;
+  if (scn.airport === 'KLGA') { FACILITY.TWR = 'laguardia tower'; }
+  // frame the crossing: intersection, the lander's last 2 km and the truck's whole path
+  if (scn.center && scn.zoom){ map.setCenter(scn.center); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : scn.zoom); }
+  else { map.setCenter([scn.intersection[0] + 0.004, scn.intersection[1] - 0.0012]); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : 14.6); }
+  const tw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'taxiway') };
+  const rw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'runway') };
+  const hp = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'holding_position') };
+  const active = { type:'FeatureCollection', features: [{ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } }] };
+  map.addSource('tw', { type:'geojson', data: tw }); map.addSource('rw', { type:'geojson', data: rw }); map.addSource('hp', { type:'geojson', data: hp });
+  map.addSource('active', { type:'geojson', data: active });
+  map.addSource('zone', { type:'geojson', data: { type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.intersection } }] } });
+  map.addSource('holdpt', { type:'geojson', data: { type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.hold_point } }] } });
+  map.addSource('ac', { type:'geojson', data: { type:'FeatureCollection', features: [] } });
+  map.addLayer({ id:'tw', type:'line', source:'tw', paint:{ 'line-color':'#8a7a2a', 'line-width':['interpolate',['linear'],['zoom'],12,1,15,4], 'line-opacity':.8 } });
+  map.addLayer({ id:'rw', type:'line', source:'rw', paint:{ 'line-color':'#5b6478', 'line-width':['interpolate',['linear'],['zoom'],12,4,15,16] } });
+  map.addLayer({ id:'rw-center', type:'line', source:'rw', paint:{ 'line-color':'#c9d1e3', 'line-width':1, 'line-dasharray':[4,4] } });
+  map.addLayer({ id:'active', type:'line', source:'active', paint:{ 'line-color':'#ff3b5c', 'line-width':['interpolate',['linear'],['zoom'],12,5,15,18], 'line-opacity':0 } });
+  map.addLayer({ id:'hp', type:'circle', source:'hp', paint:{ 'circle-radius':3, 'circle-color':'#ffb13b', 'circle-opacity':.9 } });
+  map.addLayer({ id:'holdpt', type:'circle', source:'holdpt', paint:{ 'circle-radius':6, 'circle-color':'#ffb13b', 'circle-opacity':0, 'circle-stroke-color':'#ffb13b', 'circle-stroke-width':2, 'circle-stroke-opacity':.9 } });
+  map.addLayer({ id:'tw-label', type:'symbol', source:'tw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':11, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#c8b45a', 'text-halo-color':'#070b16', 'text-halo-width':1 } });
+  map.addLayer({ id:'rw-label', type:'symbol', source:'rw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':13, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#eef2ff', 'text-halo-color':'#070b16', 'text-halo-width':1.5 } });
+  map.addLayer({ id:'zone', type:'circle', source:'zone', paint:{ 'circle-radius':22, 'circle-color':'#ff3b5c', 'circle-opacity':0, 'circle-stroke-color':'#ff3b5c', 'circle-stroke-width':2, 'circle-stroke-opacity':0 } });
+  map.addImage('airliner-cyan', iconCanvas('airliner', '#39d0ff'), { pixelRatio: 2 });
+  map.addImage('vehicle-amber', iconCanvas('vehicle', '#ffb13b'), { pixelRatio: 2 });
+  map.addImage('airliner-red', iconCanvas('airliner', '#ff3b5c'), { pixelRatio: 2 });
+  map.addImage('vehicle-red', iconCanvas('vehicle', '#ff3b5c'), { pixelRatio: 2 });
+  map.addLayer({ id:'ac', type:'symbol', source:'ac', layout:{ 'icon-image':['get','icon'], 'icon-size':.8, 'icon-rotate':['get','bearing'], 'icon-rotation-alignment':'map', 'icon-allow-overlap':true,
+    'text-field':['get','label'], 'text-offset':['get','off'], 'text-anchor':['get','anchor'], 'text-size':13, 'text-font':['Open Sans Regular'], 'text-allow-overlap':true },
+    paint:{ 'text-color':['get','color'], 'text-halo-color':'#070b16', 'text-halo-width':2 } });
+  document.getElementById('scrub').max = scn.duration;
+  renderLookahead();
+  if (LIVE) startLive();
+  reset();
+  if (qs.get('autoplay') === '1'){ setTimeout(() => { window.__startedAt = performance.now(); showCard('open', CARD_MS, () => { playing = true; reset(); setPlay(); }); }, 1200); }  // let tiles/fonts settle
+  requestAnimationFrame(tick);
+});
+
+function renderLookahead(){
+  const la = scn.alert.lookahead, L = shortName(landerId()), C = shortName(crosserId());
+  document.getElementById('lookahead').innerHTML = MODE === 'asis'
+    ? `<tr><td style="color:var(--dim)">no cross-check: each clearance is valid on its own; nothing compares them</td></tr>`
+    : (la.lander_to_d_s != null
+      ? `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>in ~${la.lander_to_d_s} s</td></tr><tr><th>${C} on runway ${scn.runway}</th><td>in ~${la.truck_to_runway_s} s</td></tr><tr><th>predicted overlap</th><td class="bad">yes — same intersection, same seconds</td></tr>`
+      : `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>t≈${la.lander_at_intersection}s</td></tr>` +
+        `<tr><th>landing roll window</th><td>${la.lander_window[0]}–${la.lander_window[1]} s</td></tr>` +
+        `<tr><th>${C} on runway</th><td>${la.crosser_window[0]}–${la.crosser_window[1]} s</td></tr>` +
+        `<tr><th>predicted overlap</th><td class="bad">${la.overlap ? la.overlap[0] + '–' + la.overlap[1] + ' s' : 'none'}</td></tr>`);
+}
+function showCard(which, ms, then){
+  const c = document.getElementById('card'); const lines = (scn.cards && scn.cards[which]) || [];
+  if (!lines.length){ then && then(); return; }
+  c.innerHTML = lines.map((l, i) => `<div class="${i === 0 ? 'c1' : 'c2'}">${l}</div>`).join(''); c.className = 'on';
+  setTimeout(() => { c.className = ''; then && then(); }, ms);
+}
+function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); render(); }
+function conflictState(){
+  const v = scn.variants[variant];
+  const resolvedAt = v.transmissions.find(x => x.actions.includes('HOLD_SHORT') && x.parsed.role === 'PILOT');
+  const start = scn.alert.t, end = resolvedAt ? resolvedAt.t : (scn.alert.lookahead.overlap ? scn.alert.lookahead.overlap[1] : scn.duration);
+  if (MODE === 'asis') return { active: false, start, end, resolved: false };
+  return { active: t >= start && t < end, start, end, resolved: !!resolvedAt && t >= resolvedAt.t };
+}
+function setCaption(text, cls){ const c = document.getElementById('caption'); c.textContent = text; c.className = text ? cls : ''; }
+function render(){
+  const v = scn.variants[variant];
+  document.getElementById('clock').innerHTML = scn.clock0 ? `<span class="wall">${wall(t)} EDT</span> t = ${t.toFixed(1)} s` : `t = ${t.toFixed(1)} s`;
+  document.getElementById('scrub').value = t;
+  const cs = conflictState();
+  for (const x of v.transmissions){ const key = variant + ':' + x.t; if (t >= x.t && !shown.has(key)){ shown.add(key); addTx(x); } }
+  const land = v.transmissions.some(x => t >= x.t && x.actions.includes('CLEARED_TO_LAND') && x.parsed.role === 'ATCO');
+  const cross = v.transmissions.some(x => t >= x.t && x.actions.includes('CROSS_RUNWAY') && x.parsed.role === 'ATCO');
+  const vacated = t > scn.alert.lookahead.crosser_window[1] + 2 && !cs.resolved;
+  const rows = [];
+  if (MODE === 'asis'){
+    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td>valid</td></tr>`);
+    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>cross at ${scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td>valid</td></tr>`);
+  } else {
+    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td class="${cs.active ? 'bad' : 'ok'}">${cs.active ? 'CONFLICT' : 'active'}</td></tr>`);
+    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>${cs.resolved ? 'hold short' : 'cross at ' + scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td class="${cs.resolved ? 'ok' : (cs.active ? 'bad' : (vacated ? 'ok' : 'warn'))}">${cs.resolved ? 'holding' : (cs.active ? 'CONFLICT' : (vacated ? 'vacated' : 'pending'))}</td></tr>`);
+  }
+  document.getElementById('statebody').innerHTML = rows.join('') || '<tr><td colspan=4 style="color:var(--dim)">no active authorizations</td></tr>';
+  const al = document.getElementById('alert'); const ban = document.getElementById('banner');
+  if (MODE === 'gmaps' && t >= scn.alert.t && !cs.resolved && t < cs.end + 0.01){
+    al.className = 'on'; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner on';
+    al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>warning ${scn.alert.id} at t=${scn.alert.t.toFixed(1)} s · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div><div class="note">${scn.alert.note}</div>`;
+  } else if (MODE === 'gmaps' && cs.resolved && t >= scn.alert.t){ al.className = 'on'; al.style.borderColor = 'var(--green)'; al.style.background = '#0d2a1a'; ban.className = 'banner';
+    al.innerHTML = `<div class="big" style="color:var(--green)">✓ CONFLICT CLEARED — ${shortName(crosserId())} holding short ${scn.runway} at ${scn.crossing_taxiway}</div><div class="note">${scn.alert.note}</div>`;
+  } else { al.className = ''; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner'; }
+  if (MODE === 'gmaps' && cs.resolved) setCaption('Decision support only; the controller decides.', 'green');
+  const freezeNow = FREEZE != null && t >= FREEZE;
+  if (freezeNow && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay();
+    const cap = (scn.captions && scn.captions[MODE]) || (MODE === 'asis' ? 'AS-IS: two valid clearances, nobody cross-checked them' : '');
+    setCaption(cap, MODE === 'asis' ? 'red' : 'green');
+    setTimeout(() => showCard('close', CARD_MS, () => setTimeout(() => window.__done = true, 300)), 2 * CARD_MS); }
+  const now = performance.now();
+  const needMap = map.getLayer('active') && (t !== lastMapT || cs.active !== lastConflict || ((cs.active || frozen) && now - lastMapAt > 66));
+  if (needMap){
+    lastMapT = t; lastMapAt = now; lastConflict = cs.active;
+    const hot = cs.active || (frozen && MODE === 'asis');
+    const blink = hot ? (0.25 + 0.35 * (0.5 + 0.5 * Math.sin(performance.now() / 150))) : 0;
+    map.setPaintProperty('active', 'line-opacity', blink);
+    map.setPaintProperty('zone', 'circle-stroke-opacity', hot ? 0.9 : 0);
+    map.setPaintProperty('zone', 'circle-opacity', hot ? 0.15 + 0.15 * Math.sin(performance.now() / 200) : 0);
+    const feats = v.aircraft.map(a => { const q = posAt(a.path, t); const red = hot; const veh = a.kind === 'vehicle';
+      return { type:'Feature', properties:{ id:a.id, label: a.label || actorName(a.id), bearing:q.b,
+        off: veh ? [-1.2, 1.2] : [1.2, -1.2], anchor: veh ? 'top-right' : 'bottom-left', color: veh ? '#ffd28a' : '#a9ecff',
+        icon: (veh ? 'vehicle-' : 'airliner-') + (red ? 'red' : (veh ? 'amber' : 'cyan')) }, geometry:{ type:'Point', coordinates:q.p } }; });
+    map.getSource('ac').setData({ type:'FeatureCollection', features: feats });
+  }
+  if (!frozen && t >= scn.duration && !window.__done) setTimeout(() => window.__done = true, 2000);
+}
+function speakerHtml(x){
+  if (x.speaker === 'TWR' || x.speaker === 'GND') return `<span class="spk atc">${shortName(x.speaker) !== x.speaker ? shortName(x.speaker) : x.speaker + ' · ' + FACILITY[x.speaker]}</span>`;
+  const veh = scn.variants[variant].aircraft.some(a => a.id === x.speaker && a.kind === 'vehicle');
+  return `<span class="spk ${veh ? 'veh' : ''}">${actorName(x.speaker)}</span>`;
+}
+function addTx(x){
+  const el = document.createElement('div'); el.className = 'tx';
+  el.innerHTML = `<div class="meta">${speakerHtml(x)}<span>${scn.clock0 ? wall(x.t) : 't=' + x.t.toFixed(1) + 's'}</span></div>` +
+    `<div class="text">“${x.text}”</div>${x.wording ? `<div class="wording">wording: ${x.wording.startsWith('as reported') ? x.wording : 'standard phraseology (reconstructed)'}</div>` : ''}<pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
+    `<div class="chips">${x.actions.map(a => `<span class="chip ${MODE === 'asis' ? 'norule' : (CRIT.has(a) ? 'crit' : '')}">${a}</span>`).join('')}${MODE === 'asis' ? '<span class="chip norule">no rule run</span>' : ''}</div>`;
+  const list = document.getElementById('txlist'); list.appendChild(el); list.parentElement.scrollTop = list.parentElement.scrollHeight;
+  if (LIVE && (playing || qs.get('autoplay') !== '1')) liveParse(x);  // autoplay: no call for the pre-roll render
+}
+// ---- live DGX Spark panel: every transmission goes to viz/live_server.py → vLLM :8001 on this machine ----
+let gpuLine = '…', liveModel = 'student';
+function startLive(){
+  const poll = () => fetch('/gpu').then(r => r.json()).then(j => { gpuLine = j.gpu; drawSparkHd(); }).catch(() => { gpuLine = 'proxy offline'; drawSparkHd(); });
+  poll(); setInterval(poll, 2000);
+  const lc = document.getElementById('livecap'); lc.style.display = 'block'; lc.textContent = 'parser live on DGX Spark · Qwen3-8B + GMAPS LoRA · 0-shot';
+}
+function drawSparkHd(){
+  document.getElementById('sparkhd').innerHTML = `model <b>${liveModel}</b> · Qwen3-8B + GMAPS LoRA (merged)<br><b>GB10 · bf16 · vLLM</b> · 0-shot · temp 0<br>GPU util, mem: <span class="gpu">${gpuLine}</span>`;
+  const ms = window.__live.filter(c => c.latency_ms).map(c => c.latency_ms).sort((a, b) => a - b);
+  document.getElementById('sparkstats').textContent = ms.length ? `${ms.length} calls · latency ${Math.round(ms[0])}–${Math.round(ms[ms.length-1])} ms · median ${Math.round(ms[Math.floor((ms.length-1)/2)])} ms` : 'waiting for first transmission…';
+}
+const norm = o => JSON.stringify({ role: o.role, callsigns: (o.callsigns||[]).map(s => s.toLowerCase()), commands: (o.commands||[]).map(s => s.toLowerCase()), values: (o.values||[]).map(s => s.toLowerCase()) });
+function liveParse(x){
+  const el = document.createElement('div'); el.className = 'call pending';
+  el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span>parsing…</span></div>`;
+  const list = document.getElementById('livelist'); list.appendChild(el); list.scrollTop = list.scrollHeight;
+  fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: x.facility || FACILITY[x.speaker] || FACILITY.GND }) })
+    .then(r => r.json()).then(j => {
+      if (j.error) throw new Error(j.error);
+      liveModel = j.model; window.__live.push({ t: x.t, id: x.id, ...j });
+      const same = typeof j.parsed === 'object' && norm(j.parsed) === norm(x.parsed);
+      el.className = 'call';
+      el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span><span class="ms">${Math.round(j.latency_ms)} ms</span> · ${j.tokens_in}→${j.tokens_out} tok</span></div>` +
+        `<pre>${typeof j.parsed === 'object' ? JSON.stringify(j.parsed) : j.parsed}</pre>` +
+        `<div class="${same ? 'match' : 'diff'}">${same ? '✓ matches the record on the left' : '≠ differs from the scripted record'}${j.json_valid ? '' : ' · invalid JSON'}</div>`;
+      list.scrollTop = list.scrollHeight; drawSparkHd();
+    }).catch(e => { el.className = 'call'; el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s</span><span class="diff">error: ${e.message}</span></div>`; });
+}
+function tick(now){
+  if (playing){ if (last != null) t = Math.min(scn.duration, t + (now - last) / 1000 * speed); if (t >= scn.duration) playing = false, setPlay(); }
+  last = now; if (scn) render(); requestAnimationFrame(tick);
+}
+function setPlay(){ document.getElementById('play').textContent = playing ? '❚❚ pause' : '▶ play'; }
+document.getElementById('play').onclick = () => { if (frozen) return; playing = !playing; setPlay(); };
+document.getElementById('restart').onclick = () => { reset(); };
+document.getElementById('scrub').oninput = e => { t = parseFloat(e.target.value); frozen = false; shown.clear(); document.getElementById('txlist').innerHTML = ''; render(); };
+document.getElementById('speed').onchange = e => speed = parseFloat(e.target.value);
+document.getElementById('variant').onchange = e => { variant = e.target.value; reset(); };
+</script>
+</body>
+</html>

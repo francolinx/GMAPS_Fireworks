@@ -7,306 +7,367 @@
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-  :root{--bg:#070b16;--panel:#0e1526;--line:#1d2a44;--txt:#d7e0f2;--dim:#7f8cab;--cyan:#39d0ff;--amber:#ffb13b;--red:#ff3b5c;--green:#3ddc84;--nv:#76b900;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  :root{--bg:#070b16;--panel:#0e1526;--line:#1d2a44;--txt:#d7e0f2;--dim:#7f8cab;--cyan:#39d0ff;--white:#ffffff;--amber:#ffb13b;--red:#ff3b5c;--green:#3ddc84;--nv:#76b900;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   *{box-sizing:border-box} html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-  #app{display:grid;grid-template-columns:350px 1fr 350px;grid-template-rows:48px 1fr 56px;height:100%}
-  header{grid-column:1/4;display:flex;align-items:center;gap:16px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-  header h1{font-size:15px;margin:0;letter-spacing:.08em;font-family:var(--mono)} header .sub{color:var(--dim);font-family:var(--mono);font-size:12px}
-  header .spacer{flex:1} header button,header select{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-family:var(--mono);cursor:pointer}
+  #app{display:grid;grid-template-columns:440px 1fr 340px;grid-template-rows:44px 1fr 54px;height:100%}
+  header{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  header h1{font-size:14px;margin:0;letter-spacing:.08em;font-family:var(--mono)} header .sub{color:var(--dim);font-family:var(--mono);font-size:12px} header .spacer{flex:1}
   #modetag{font-family:var(--mono);font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;letter-spacing:.08em}
   #modetag.asis{background:#3a1420;color:var(--red)} #modetag.gmaps{background:#0d2a1a;color:var(--green)}
-  #radio,#right{background:var(--panel);overflow:auto;padding:12px;border-right:1px solid var(--line)} #right{border-right:0;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:6px;overflow:hidden}
-  #state{flex:0 0 auto} #spark{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;border-top:1px solid var(--line);padding-top:10px}
-  #map{position:relative} #map .maplibregl-ctrl-attrib{font-size:10px}
-  h2{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:4px 0 10px;font-family:var(--mono)}
-  .actors{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:11px;background:#0b1222}
-  .actors div{margin:2px 0} .actors .ac{color:var(--cyan)} .actors .veh{color:var(--amber)}
-  .tx{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:#0b1222;animation:in .25s ease-out}
-  .tx .meta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--dim)} .tx .spk{color:var(--cyan)} .tx .spk.veh{color:var(--amber)} .tx .spk.atc{color:#c9d1e3}
-  .tx .text{margin:4px 0 6px;font-style:italic} .tx pre{margin:0;font-family:var(--mono);font-size:11px;color:#a9b8d8;white-space:pre-wrap}
-  .chips{margin-top:6px} .chip{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:4px;background:#1a2a4a;color:var(--cyan);margin-right:4px}
-  .chip.crit{background:#3a1420;color:var(--red)} .chip.norule{background:#1b1f2b;color:var(--dim)}
+  #radio,#right{background:var(--panel);overflow:auto;padding:10px;border-right:1px solid var(--line)} #right{border-right:0;border-left:1px solid var(--line)}
+  h2{font-size:11px;letter-spacing:.14em;color:var(--dim);margin:2px 0 8px;font-family:var(--mono)}
+  /* speakers: one colour each, used everywhere */
+  .s-TWR{--sc:var(--cyan)} .s-JAZZ646{--sc:var(--white)} .s-TRUCK1{--sc:var(--amber)}
+  .badge{display:inline-block;font-family:var(--mono);font-weight:800;font-size:12px;letter-spacing:.04em;color:#05080f;background:var(--sc);padding:3px 8px;border-radius:5px;white-space:nowrap}
+  .tx{border:1px solid var(--line);border-left:5px solid var(--sc);border-radius:8px;padding:8px 10px;margin-bottom:9px;background:#0b1222;animation:in .25s ease-out}
+  .tx .meta{display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:6px}
+  .tx .who{font-family:var(--mono);font-size:10.5px;color:var(--sc);margin:-2px 0 6px}
+  .io{display:grid;grid-template-columns:1fr 18px 1fr;gap:6px;align-items:start}
+  .io .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim);margin-bottom:3px}
+  .io .in{font-style:italic;font-size:13px;color:#eef2ff} .io .arrow{color:var(--dim);font-size:16px;padding-top:14px;text-align:center}
+  .io .out{font-family:var(--mono);font-size:10.5px;color:#cfe8b8;white-space:pre-wrap;word-break:break-word} .io .out.wait{color:var(--dim)}
+  .wording{font-family:var(--mono);font-size:10px;color:var(--amber);margin-top:4px}
+  .checks{margin-top:6px;font-family:var(--mono);font-size:10.5px;display:flex;flex-wrap:wrap;gap:4px 10px} .ck{color:var(--green)} .cx{color:var(--red)} .cxa{color:var(--amber)}
+  .why{margin-top:5px;font-family:var(--mono);font-size:11px;color:#dfe7f7;border-top:1px dashed var(--line);padding-top:5px} .why b{color:var(--sc)}
+  .lat{color:var(--nv)}
   @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
   table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px} td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top} th{color:var(--dim);font-weight:500}
   .ok{color:var(--green)} .warn{color:var(--amber)} .bad{color:var(--red)}
   #alert{display:none;margin-top:10px;border:1px solid var(--red);background:#2a0d16;border-radius:8px;padding:10px;font-family:var(--mono);font-size:12px}
   #alert.on{display:block;animation:pulse 1s infinite} @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,92,.0)}50%{box-shadow:0 0 0 6px rgba(255,59,92,.25)}}
-  #alert .big{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px} #alert .note{color:var(--dim);margin-top:6px}
-  #spark .hd{font-family:var(--mono);font-size:11px;line-height:1.5} #spark .hd b{color:var(--nv)} #spark .gpu{color:var(--nv)}
-  #spark .stats{font-family:var(--mono);font-size:11px;color:var(--txt);margin:4px 0 6px}
-  #livelist{overflow:auto;flex:1 1 auto;min-height:0}
-  .call{border:1px solid #23361a;border-radius:6px;padding:5px 8px;margin-bottom:6px;background:#0c160c;font-family:var(--mono);font-size:10.5px;animation:in .25s ease-out}
-  .call .m{display:flex;justify-content:space-between;color:var(--dim)} .call .ms{color:var(--nv);font-weight:700} .call pre{margin:3px 0 0;white-space:pre-wrap;color:#cfe8b8}
-  .call .match{color:var(--green)} .call .diff{color:var(--amber)} .call.pending{opacity:.6}
-  footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 16px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
+  #alert .big{font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px} #alert .rwhy{margin-top:8px;padding-top:6px;border-top:1px dashed #5a2030;color:#ffd7de}
+  #spark{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;font-family:var(--mono);font-size:11px;line-height:1.55} #spark b{color:var(--nv)}
+  #map{position:relative} #map .maplibregl-ctrl-attrib{font-size:10px}
+  #freq{position:absolute;left:10px;right:10px;top:10px;z-index:7;background:rgba(10,16,30,.94);border:1px solid var(--line);border-left:6px solid var(--sc);border-radius:10px;padding:9px 14px;display:none}
+  #freq.on{display:block;animation:freqin .35s ease-out} @keyframes freqin{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+  #freq .top{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--dim)} #freq .top .now{letter-spacing:.16em} #freq .top .clk{margin-left:auto;color:#eef2ff;font-size:13px;font-weight:700}
+  #freq .words{font-size:21px;font-weight:600;color:#fff;margin-top:5px;font-style:italic;line-height:1.25} #freq .wd{font-family:var(--mono);font-size:10.5px;color:var(--amber);margin-top:3px}
+  #timeline{position:absolute;left:10px;right:10px;bottom:10px;z-index:7;background:rgba(10,16,30,.95);border:1px solid var(--line);border-radius:10px;padding:8px 12px 8px}
+  #tlbar{position:relative;height:74px;margin:0 6px} #tlbar .axis{position:absolute;left:0;right:0;top:40px;height:3px;background:#2a3a5e;border-radius:2px}
+  #tlbar .tick{position:absolute;top:47px;font-family:var(--mono);font-size:9.5px;color:var(--dim);transform:translateX(-50%)}
+  #tlbar .mk{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:9.5px;white-space:nowrap;text-align:center;line-height:1.1}
+  #tlbar .mk .sym{font-size:13px;display:block} #tlbar .cursor{position:absolute;top:2px;bottom:0;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+  #tlkey{display:grid;grid-template-columns:1fr 1fr;gap:1px 14px;font-family:var(--mono);font-size:10px;margin-top:4px;color:#cdd6ea} #tlkey .never{color:var(--dim)}
+  #tlcap{font-family:var(--mono);font-size:11.5px;color:#eafff1;margin-top:5px;display:none} #tlcap.on{display:block}
+  .banner{position:absolute;left:50%;top:126px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:7px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:6} .banner.on{display:block}
+  #caption{position:absolute;left:50%;bottom:218px;transform:translateX(-50%);width:max-content;max-width:88%;padding:9px 16px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:14px;line-height:1.45;display:none;z-index:8;text-align:center}
+  #caption.red{display:block;background:rgba(120,10,30,.94);border:2px solid var(--red);color:#fff} #caption.green{display:block;background:rgba(8,60,32,.94);border:2px solid var(--green);color:#eafff1}
+  #livecap{position:absolute;right:56px;bottom:200px;z-index:6;font-family:var(--mono);font-size:10.5px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:4px 8px;border-radius:6px;display:none}
+  footer{grid-column:1/4;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-top:1px solid var(--line);font-family:var(--mono);font-size:12px}
   footer input[type=range]{flex:1} footer button{background:#16213a;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:var(--mono)}
-  #clock{min-width:90px;color:var(--cyan)}
-  .banner{position:absolute;left:50%;top:52px;transform:translateX(-50%);background:rgba(255,59,92,.92);color:#fff;padding:8px 16px;border-radius:8px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;display:none;z-index:5}
-  .banner.on{display:block}
-  #caption{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;max-width:86%;padding:10px 18px;border-radius:10px;font-family:var(--mono);font-weight:700;font-size:15px;line-height:1.45;letter-spacing:.03em;display:none;z-index:6;text-align:center}
-  #caption.red{display:block;background:rgba(120,10,30,.92);border:2px solid var(--red);color:#fff}
-  #caption.green{display:block;background:rgba(8,60,32,.92);border:2px solid var(--green);color:#eafff1}
-  #card{position:fixed;inset:0;z-index:50;background:#05080f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:60px;text-align:center;font-family:var(--mono)}
-  #card.on{display:flex} #card .c1{font-size:40px;font-weight:700;color:#eef2ff;letter-spacing:.04em} #card .c2{font-size:21px;color:#b7c3dd;max-width:1100px}
-  .tx .wording{font-family:var(--mono);font-size:10px;color:var(--amber);margin:-2px 0 6px} #clock .wall{font-size:16px;font-weight:700;color:#eef2ff;margin-right:10px}
-  #clock{min-width:260px}
-  #livecap{position:absolute;left:12px;top:12px;z-index:6;font-family:var(--mono);font-size:12px;background:rgba(14,21,38,.88);border:1px solid var(--nv);color:var(--nv);padding:5px 10px;border-radius:6px;display:none}
+  #clock{min-width:330px;color:var(--cyan)} #clock .wall{font-size:22px;font-weight:800;color:#fff;margin-right:12px;letter-spacing:.02em}
+  #card{position:fixed;inset:0;z-index:50;background:#05080f;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px;text-align:center;font-family:var(--mono)}
+  #card.on{display:flex} #card .c1{font-size:38px;font-weight:700;color:#eef2ff;letter-spacing:.03em} #card .c2{font-size:20px;color:#b7c3dd;max-width:1150px}
+  #card table{width:auto;font-size:21px;margin-top:6px} #card td{padding:7px 18px;border-bottom:1px solid #1d2a44;text-align:left} #card td.n{text-align:right;font-weight:700} #card tr.ours td{color:var(--nv)} #card .note{font-size:16px;color:#9fb0cf}
+  /* stand-alone views */
+  body.view-log #app,body.view-spark #app{display:none}
+  #view{display:none;padding:22px 28px;font-family:var(--mono)} body.view-log #view,body.view-spark #view{display:block}
+  #view h1{font-size:18px;letter-spacing:.08em;margin:0 0 4px} #view .sub{color:var(--dim);font-size:12px;margin-bottom:16px}
+  #view table{font-size:12.5px} #view td{padding:8px 6px;vertical-align:top} #view .dot{display:inline-block;width:12px;height:12px;border-radius:50%}
+  .sp-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px} .sp-box{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--panel)}
+  .sp-big{font-size:30px;font-weight:800;color:var(--nv)} .ep{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:13px} .ep .l{width:12px;height:12px;border-radius:50%}
+  .bars div{display:flex;align-items:center;gap:8px;margin:3px 0;font-size:11.5px} .bars .b{height:12px;border-radius:3px;background:var(--nv)}
 </style>
 </head>
 <body>
 <div id="card"></div>
+<div id="view"></div>
 <div id="app">
   <header>
-    <h1>GMAPS · RUNWAY MONITOR</h1><span class="sub" id="hdr">loading…</span>
-    <span class="spacer"></span>
-    <span id="modetag"></span>
-    <label class="sub">variant</label>
-    <select id="variant"><option value="unresolved">unresolved</option><option value="resolved">hold-short issued</option></select>
-    <label class="sub">speed</label>
-    <select id="speed"><option>1</option><option selected>2</option><option>4</option><option>8</option></select>
+    <h1>GMAPS · RUNWAY MONITOR</h1><span class="sub" id="hdr">loading…</span><span class="spacer"></span><span id="modetag"></span>
   </header>
-  <aside id="radio"><h2>RADIO · TRANSCRIPT → PARSED RECORD</h2><div class="actors" id="actors"></div><div id="txlist"></div></aside>
-  <div id="map"><div class="banner" id="banner">POSSIBLE CONFLICT</div><div id="livecap"></div><div id="caption"></div></div>
+  <aside id="radio"><h2>RADIO · INPUT → PARSED OUTPUT (live) · ✓ vs scripted record</h2><div id="txlist"></div></aside>
+  <div id="map">
+    <div id="freq"><div class="top"><span class="now">NOW ON FREQUENCY</span><span id="freqbadge"></span><span class="clk" id="freqclk"></span></div><div class="words" id="freqwords"></div><div class="wd" id="freqwd"></div></div>
+    <div class="banner" id="banner">POSSIBLE CONFLICT</div><div id="livecap"></div><div id="caption"></div>
+    <div id="timeline"><div id="tlbar"></div><div id="tlkey"></div><div id="tlcap"></div></div>
+  </div>
   <aside id="right">
-    <div id="state">
-      <h2>CLEARANCE STATE</h2>
-      <table><thead><tr><th>rwy</th><th>authorization</th><th>who</th><th>status</th></tr></thead><tbody id="statebody"></tbody></table>
-      <div id="alert"></div>
-      <h2 style="margin-top:12px">LOOK-AHEAD</h2>
-      <table id="lookahead"></table>
-    </div>
-    <div id="spark">
-      <h2>DGX SPARK · LIVE PARSER</h2>
-      <div class="hd" id="sparkhd">proxy offline — start <code>python3 viz/live_server.py</code> and open <code>:8090/?live=1</code></div>
-      <div class="stats" id="sparkstats"></div>
-      <div id="livelist"></div>
-    </div>
+    <h2>CLEARANCE LEDGER · RWY <span id="rwy"></span></h2>
+    <table><thead><tr><th>rwy</th><th>authorization</th><th>who</th><th>status</th></tr></thead><tbody id="statebody"></tbody></table>
+    <div id="alert"></div>
+    <h2 style="margin-top:12px">LOOK-AHEAD</h2><table id="lookahead"></table>
+    <div id="spark"></div>
   </aside>
   <footer>
-    <button id="play">▶ play</button><button id="restart">↺</button>
-    <span id="clock">t = 0.0 s</span>
-    <input type="range" id="scrub" min="0" max="100" step="0.1" value="0">
-    <span class="sub" id="attrib">© OpenStreetMap contributors</span>
+    <button id="play">▶ play</button><button id="restart">↺</button><span id="clock"></span>
+    <input type="range" id="scrub" min="0" max="100" step="0.1" value="0"><span class="sub">© OpenStreetMap contributors · NTSB DCA26MA161 (preliminary)</span>
   </footer>
 </div>
 <script>
 const qs = new URLSearchParams(location.search);
-let GEO = qs.get('geo');
 const SCN = qs.get('scenario') || 'scenario_lga_04.json';
-// mode=asis: transmissions are parsed but no rule runs (today's tower); mode=gmaps (default): the conflict engine runs.
 const MODE = qs.get('mode') === 'asis' ? 'asis' : 'gmaps';
-let FREEZE = qs.has('freeze') ? parseFloat(qs.get('freeze')) : null;
-const CARD_MS = parseFloat(qs.get('cardms') || 3000);
+const VIEW = qs.get('view') || 'monitor';
 const LIVE = qs.get('live') === '1';
-const CRIT = new Set(['CLEARED_TO_LAND','CLEARED_FOR_TAKEOFF','LINE_UP_AND_WAIT','HOLD_SHORT','HOLD_POSITION','CROSS_RUNWAY','BACKTRACK','TOUCH_AND_GO','VACATE_RUNWAY','GO_AROUND']);
-const FACILITY = { TWR: 'san francisco tower', GND: 'san francisco ground' };
-let geo, scn, variant = qs.get('variant') || 'unresolved', t = 0, playing = false, speed = parseFloat(qs.get('speed') || 2), last = null, shown = new Set();
-let lastMapT = -1, lastMapAt = 0, lastConflict = null, frozen = false;
+const CARD_MS = parseFloat(qs.get('cardms') || 3000);
+let FREEZE = qs.has('freeze') ? parseFloat(qs.get('freeze')) : null;
+let scn, geo, stepped = {}, t = 0, playing = false, speed = parseFloat(qs.get('speed') || 2), last = null, shown = new Set(), frozen = false, lastMapT = -1, lastMapAt = 0;
 window.__done = false; window.__live = [];
-document.getElementById('variant').value = variant; document.getElementById('speed').value = String(speed);
-const mt = document.getElementById('modetag'); mt.className = MODE; mt.textContent = MODE === 'asis' ? 'AS-IS · NO CROSS-CHECK' : 'WITH GMAPS';
+const live = {};            // transmission id -> live result
+const SPK_LABEL = { TWR: 'LGA TOWER', JAZZ646: 'JAZZ 646 · Air Canada Express 8646 · CRJ900', TRUCK1: 'TRUCK 1 · Rescue 35 · Port Authority ARFF' };
+const SPK_COLOR = { TWR: '#39d0ff', JAZZ646: '#ffffff', TRUCK1: '#ffb13b' };
+const T0 = 0, T1 = 150;     // timeline 23:35:00 → 23:37:30
+const TL_EVENTS = [[7, 'landing clearance', '▲', '#39d0ff'], [124, 'crossing clearance', '▲', '#39d0ff'], [132, 'controller: “stop”', '▲', '#39d0ff'], [140, 'controller: “stop”', '▲', '#39d0ff'], [142, 'Truck 1 enters runway 4', '■', '#ff3b5c']];
+const ARMS = [ // timeline key: arm file → label, symbol
+  ['atc-nemotron-nano-30b-v1', 'GMAPS + Nemotron-30B LoRA (ours)', '★'],
+  ['atc-qwen3-8b', 'GMAPS + Qwen3-8B LoRA (ours, live on this Spark)', '☆'],
+  ['atc-nemotron-lightning-30b-v1', 'GMAPS + Lightning-30B LoRA (ours)', '☆'],
+  ['qwen3-8b-base', 'GMAPS + off-the-shelf Qwen3-8B', '○'],
+  ['nemotron-nano-30b-base', 'GMAPS + off-the-shelf Nemotron-30B', '○'],
+  ['nemotron-lightning-30b-base', 'GMAPS + off-the-shelf Lightning-30B (hosted)', '○'],
+  ['nemotron-lightning-3.5-30b-spark-base', 'GMAPS + off-the-shelf Lightning-30B (NVFP4, Spark)', '○']];
 
-function iconCanvas(kind, color){
-  const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d');
-  g.fillStyle = color; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
-  if (kind === 'vehicle'){ g.rect(12,12,24,24); } else { g.moveTo(24,4); g.lineTo(42,40); g.lineTo(24,32); g.lineTo(6,40); g.closePath(); }
-  g.fill(); g.stroke(); return g.getImageData(0,0,48,48);
+function wall(tt){ let s = 23*3600 + 35*60 + Math.floor(tt); const p = n => String(n).padStart(2,'0'); return `${p(Math.floor(s/3600)%24)}:${p(Math.floor(s/60)%60)}:${p(s%60)}`; }
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
+function badge(spk){ return `<span class="badge s-${spk}">${SPK_LABEL[spk] || spk}</span>`; }
+function wordingText(w){ return w && w.startsWith('as reported') ? `wording: ${w}` : 'wording: standard phraseology (reconstructed)'; }
+
+// ---------- ledger logic in plain words (same rules as the page's ledger: ATCO clearances on runway 4) ----------
+const norm = s => String(s || '').toLowerCase().trim();
+const csRoot = s => norm(s).replace(/\s+and company$/, '');
+function actionsOf(rec){ const c = (rec.commands || []).map(norm).join(' | '); const a = [];
+  if (/cleared to land/.test(c)) a.push('CLEARED_TO_LAND');
+  if (/request/.test(c)) a.push('REQUEST'); else if (/\bcross/.test(c)) a.push('CROSS_RUNWAY');
+  if (/\bstop\b/.test(c)) a.push('STOP'); return a; }
+function rwyOf(rec){ return [...(rec.values || []), ...(rec.commands || [])].some(v => /runway\s+four\b/.test(norm(v))) ? '4' : null; }
+function ledgerKey(rec){ if (!rec || typeof rec !== 'object') return 'invalid';
+  const a = actionsOf(rec).filter(x => x === 'CLEARED_TO_LAND' || x === 'CROSS_RUNWAY');
+  return (rec.role === 'ATCO' && a.length) ? `${a.join('+')}|${rwyOf(rec)}|${csRoot((rec.callsigns || [])[0])}` : 'none'; }
+function fieldChecks(out, gold){
+  const eq = (a, b) => JSON.stringify((a || []).map(norm)) === JSON.stringify((b || []).map(norm));
+  return [['role', out.role === gold.role], ['callsigns', eq(out.callsigns, gold.callsigns)], ['commands', eq(out.commands, gold.commands)], ['values', eq(out.values, gold.values)]];
 }
-function posAt(path, tt){
-  if (tt <= path[0].t) return {p: path[0].p, b: bearing(path[0].p, path[1].p)};
-  for (let i = 1; i < path.length; i++){
-    if (tt <= path[i].t){ const a = path[i-1], b = path[i]; const f = (b.t - a.t) ? (tt - a.t)/(b.t - a.t) : 1;
-      const dir = (a.p[0] === b.p[0] && a.p[1] === b.p[1]) ? bearing(path[i-2 >= 0 ? i-2 : 0].p, a.p) : bearing(a.p, b.p);
-      return {p:[a.p[0] + f*(b.p[0]-a.p[0]), a.p[1] + f*(b.p[1]-a.p[1])], b: dir}; }
-  }
-  const n = path.length; let k = n - 1; while (k > 0 && path[k-1].p[0] === path[n-1].p[0] && path[k-1].p[1] === path[n-1].p[1]) k--;
-  return {p: path[n-1].p, b: bearing(path[Math.max(0, k-1)].p, path[k].p)};
+function whyLine(x, out){
+  const gold = x.parsed, ok = typeof out === 'object';
+  if (!ok) return { cls: 'bad', text: '✗ output is not valid JSON → nothing enters the ledger' };
+  const checks = fieldChecks(out, gold), allOk = checks.every(c => c[1]);
+  const same = ledgerKey(out) === ledgerKey(gold);
+  const acts = actionsOf(out), cs = (out.callsigns || [])[0], who = cs ? cs.toUpperCase() : '—';
+  const rule = MODE === 'asis' ? ' (as-is: no rule runs)' : '';
+  let effect;
+  if (out.role === 'ATCO' && acts.includes('CLEARED_TO_LAND') && rwyOf(out)) effect = `“cleared to land” + “runway four” → CLEARED_TO_LAND, RWY 4, ${who} → runway 4 held for the landing${rule}`;
+  else if (out.role === 'ATCO' && acts.includes('CROSS_RUNWAY') && rwyOf(out)) effect = `“cross” + “runway four” → CROSS_RUNWAY on RWY 4 at D, ${who} → checks against the active landing clearance${rule}`;
+  else if (acts.includes('REQUEST')) effect = `request from ${who} (${out.role}) → not an authorization; the ledger waits for the clearance`;
+  else if (out.role === 'PILOT') effect = `read-back by ${who} (PILOT) → no new authorization`;
+  else if (acts.includes('STOP')) effect = `“stop” → STOP for ${(out.callsigns || []).map(s => s.toUpperCase()).join(', ') || '—'} → no runway-4 authorization added`;
+  else effect = 'no runway instruction → no ledger change';
+  if (allOk) return { cls: 'ok', text: '✓ ' + effect };
+  const bad = checks.filter(c => !c[1]).map(c => c[0]);
+  let diff = bad.map(f => f === 'role' ? `role read as ${out.role} (scripted ${gold.role})` : f === 'callsigns' ? `callsign ${JSON.stringify(out.callsigns)} vs ${JSON.stringify(gold.callsigns)}` : `${f} ${JSON.stringify(out[f])}`).join('; ');
+  return same ? { cls: 'warn', text: `✗ ${diff} — same ledger record, no ledger effect · ${effect}` }
+              : { cls: 'bad', text: `✗ ${diff} — changes what the ledger sees · ${effect}` };
 }
-function bearing(a, b){ const toR = x => x*Math.PI/180; const y = Math.sin(toR(b[0]-a[0]))*Math.cos(toR(b[1]));
-  const x = Math.cos(toR(a[1]))*Math.sin(toR(b[1])) - Math.sin(toR(a[1]))*Math.cos(toR(b[1]))*Math.cos(toR(b[0]-a[0]));
-  return (Math.atan2(y,x)*180/Math.PI + 360) % 360; }
-const actorName = id => (scn && scn.actors && scn.actors[id]) || id;
-const shortName = id => (scn && scn.actor_short && scn.actor_short[id]) || ({ MPL212: 'MPL212', RESCUE7: 'RESCUE 7' })[id] || id;
-const landerId = () => scn.variants[variant].aircraft.find(a => a.kind !== 'vehicle').id;
-const crosserId = () => scn.variants[variant].aircraft.find(a => a.kind === 'vehicle').id;
-function wall(tt){ if (!scn || !scn.clock0) return ''; let s = scn.clock0[0]*3600 + scn.clock0[1]*60 + scn.clock0[2] + Math.floor(tt); const p = n => String(n).padStart(2,'0'); return `${p(Math.floor(s/3600)%24)}:${p(Math.floor(s/60)%60)}:${p(s%60)}`; }
 
-const map = new maplibregl.Map({ container: 'map', center: [-122.375, 37.619], zoom: 13.6, pitch: 0, attributionControl: false,
-  style: { version: 8, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b16' } }] } });
-map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap contributors (ODbL) · fictional traffic' }));
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-map.on('load', async () => {
+// ---------- monitor ----------
+const map = VIEW === 'monitor' ? new maplibregl.Map({ container: 'map', center: [-73.882, 40.771], zoom: 14.7, attributionControl: false,
+  style: { version: 8, glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf', sources: {}, layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#070b16' } }] } }) : null;
+async function boot(){
   scn = await fetch(SCN).then(r => r.json());
-  GEO = GEO || scn.geo || (scn.airport === 'KLGA' ? 'klga.geojson' : 'ksfo.geojson');
-  geo = await fetch(GEO).then(r => r.json());
-  document.getElementById('hdr').textContent = `${scn.title ? scn.title + ' · ' : ''}${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway}`;
+  try { stepped = await fetch('lga/stepped_in.json').then(r => r.json()); } catch (e) { stepped = {}; }
   if (FREEZE == null && scn.freeze) FREEZE = scn.freeze[MODE];
-  const atcLine = scn.airport === 'KLGA' ? 'LGA TOWER · local controller, transmitting on tower and ground' : 'TWR / GND · San Francisco tower / ground';
-  document.getElementById('actors').innerHTML = `<div class="ac">▲ ${actorName(landerId())}</div><div class="veh">■ ${actorName(crosserId())}</div><div style="color:var(--dim)">${atcLine}</div>`;
-  if (scn.airport === 'KLGA') { FACILITY.TWR = 'laguardia tower'; }
-  // frame the crossing: intersection, the lander's last 2 km and the truck's whole path
-  if (scn.center && scn.zoom){ map.setCenter(scn.center); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : scn.zoom); }
-  else { map.setCenter([scn.intersection[0] + 0.004, scn.intersection[1] - 0.0012]); map.setZoom(qs.has('zoom') ? parseFloat(qs.get('zoom')) : 14.6); }
-  const tw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'taxiway') };
-  const rw = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'runway') };
-  const hp = { type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === 'holding_position') };
-  const active = { type:'FeatureCollection', features: [{ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } }] };
-  map.addSource('tw', { type:'geojson', data: tw }); map.addSource('rw', { type:'geojson', data: rw }); map.addSource('hp', { type:'geojson', data: hp });
-  map.addSource('active', { type:'geojson', data: active });
-  map.addSource('zone', { type:'geojson', data: { type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.intersection } }] } });
-  map.addSource('holdpt', { type:'geojson', data: { type:'FeatureCollection', features:[{ type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.hold_point } }] } });
+  if (VIEW === 'log') return bootLog();
+  if (VIEW === 'spark') return bootSpark();
+  geo = await fetch(scn.geo || 'klga.geojson').then(r => r.json());
+  document.getElementById('hdr').textContent = `${scn.title} · ${scn.airport} · RWY ${scn.runway} · crossing at TWY ${scn.crossing_taxiway} · reconstruction, NTSB DCA26MA161 (preliminary)`;
+  document.getElementById('rwy').textContent = scn.runway;
+  const mt = document.getElementById('modetag'); mt.className = MODE; mt.textContent = MODE === 'asis' ? 'AS-IS · NO CROSS-CHECK' : 'WITH GMAPS';
+  map.setCenter(scn.center); map.setZoom(scn.zoom);
+  const kind = k => ({ type:'FeatureCollection', features: geo.features.filter(f => f.properties.kind === k) });
+  map.addSource('tw', { type:'geojson', data: kind('taxiway') }); map.addSource('rw', { type:'geojson', data: kind('runway') }); map.addSource('hp', { type:'geojson', data: kind('holding_position') });
+  map.addSource('active', { type:'geojson', data: { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: scn.runway_line } } });
+  map.addSource('zone', { type:'geojson', data: { type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.intersection } } });
+  map.addSource('holdpt', { type:'geojson', data: { type:'Feature', properties:{}, geometry:{ type:'Point', coordinates: scn.hold_point } } });
   map.addSource('ac', { type:'geojson', data: { type:'FeatureCollection', features: [] } });
   map.addLayer({ id:'tw', type:'line', source:'tw', paint:{ 'line-color':'#8a7a2a', 'line-width':['interpolate',['linear'],['zoom'],12,1,15,4], 'line-opacity':.8 } });
   map.addLayer({ id:'rw', type:'line', source:'rw', paint:{ 'line-color':'#5b6478', 'line-width':['interpolate',['linear'],['zoom'],12,4,15,16] } });
   map.addLayer({ id:'rw-center', type:'line', source:'rw', paint:{ 'line-color':'#c9d1e3', 'line-width':1, 'line-dasharray':[4,4] } });
   map.addLayer({ id:'active', type:'line', source:'active', paint:{ 'line-color':'#ff3b5c', 'line-width':['interpolate',['linear'],['zoom'],12,5,15,18], 'line-opacity':0 } });
   map.addLayer({ id:'hp', type:'circle', source:'hp', paint:{ 'circle-radius':3, 'circle-color':'#ffb13b', 'circle-opacity':.9 } });
-  map.addLayer({ id:'holdpt', type:'circle', source:'holdpt', paint:{ 'circle-radius':6, 'circle-color':'#ffb13b', 'circle-opacity':0, 'circle-stroke-color':'#ffb13b', 'circle-stroke-width':2, 'circle-stroke-opacity':.9 } });
+  map.addLayer({ id:'holdpt', type:'circle', source:'holdpt', paint:{ 'circle-radius':6, 'circle-opacity':0, 'circle-stroke-color':'#ffb13b', 'circle-stroke-width':2 } });
   map.addLayer({ id:'tw-label', type:'symbol', source:'tw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':11, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#c8b45a', 'text-halo-color':'#070b16', 'text-halo-width':1 } });
   map.addLayer({ id:'rw-label', type:'symbol', source:'rw', layout:{ 'symbol-placement':'line', 'text-field':['get','ref'], 'text-size':13, 'text-font':['Open Sans Regular'] }, paint:{ 'text-color':'#eef2ff', 'text-halo-color':'#070b16', 'text-halo-width':1.5 } });
-  map.addLayer({ id:'zone', type:'circle', source:'zone', paint:{ 'circle-radius':22, 'circle-color':'#ff3b5c', 'circle-opacity':0, 'circle-stroke-color':'#ff3b5c', 'circle-stroke-width':2, 'circle-stroke-opacity':0 } });
-  map.addImage('airliner-cyan', iconCanvas('airliner', '#39d0ff'), { pixelRatio: 2 });
-  map.addImage('vehicle-amber', iconCanvas('vehicle', '#ffb13b'), { pixelRatio: 2 });
-  map.addImage('airliner-red', iconCanvas('airliner', '#ff3b5c'), { pixelRatio: 2 });
-  map.addImage('vehicle-red', iconCanvas('vehicle', '#ff3b5c'), { pixelRatio: 2 });
+  map.addLayer({ id:'zone', type:'circle', source:'zone', paint:{ 'circle-radius':20, 'circle-color':'#ff3b5c', 'circle-opacity':0, 'circle-stroke-color':'#ff3b5c', 'circle-stroke-width':2, 'circle-stroke-opacity':0 } });
+  const icon = (kind, color) => { const c = document.createElement('canvas'); c.width = c.height = 48; const g = c.getContext('2d'); g.fillStyle = color; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath();
+    if (kind === 'vehicle') g.rect(12,12,24,24); else { g.moveTo(24,4); g.lineTo(42,40); g.lineTo(24,32); g.lineTo(6,40); g.closePath(); } g.fill(); g.stroke(); return g.getImageData(0,0,48,48); };
+  map.addImage('ac-white', icon('airliner', '#ffffff'), { pixelRatio: 2 }); map.addImage('veh-amber', icon('vehicle', '#ffb13b'), { pixelRatio: 2 });
+  map.addImage('ac-red', icon('airliner', '#ff3b5c'), { pixelRatio: 2 }); map.addImage('veh-red', icon('vehicle', '#ff3b5c'), { pixelRatio: 2 });
   map.addLayer({ id:'ac', type:'symbol', source:'ac', layout:{ 'icon-image':['get','icon'], 'icon-size':.8, 'icon-rotate':['get','bearing'], 'icon-rotation-alignment':'map', 'icon-allow-overlap':true,
     'text-field':['get','label'], 'text-offset':['get','off'], 'text-anchor':['get','anchor'], 'text-size':13, 'text-font':['Open Sans Regular'], 'text-allow-overlap':true },
     paint:{ 'text-color':['get','color'], 'text-halo-color':'#070b16', 'text-halo-width':2 } });
   document.getElementById('scrub').max = scn.duration;
-  renderLookahead();
-  if (LIVE) startLive();
+  drawTimeline(); drawLookahead(); startSpark();
+  if (LIVE){ const lc = document.getElementById('livecap'); lc.style.display = 'block'; lc.textContent = 'parser live on DGX Spark · Qwen3-8B + GMAPS LoRA · 0-shot'; }
   reset();
-  if (qs.get('autoplay') === '1'){ setTimeout(() => { window.__startedAt = performance.now(); showCard('open', CARD_MS, () => { playing = true; reset(); setPlay(); }); }, 1200); }  // let tiles/fonts settle
+  if (qs.get('autoplay') === '1') setTimeout(() => { window.__startedAt = performance.now(); showCard('open', CARD_MS, () => { playing = true; reset(); setPlay(); }); }, 1200);
   requestAnimationFrame(tick);
-});
+}
+if (map) map.on('load', boot); else boot();
 
-function renderLookahead(){
-  const la = scn.alert.lookahead, L = shortName(landerId()), C = shortName(crosserId());
+function posAt(path, tt){ const bearing = (a, b) => { const r = x => x*Math.PI/180; const y = Math.sin(r(b[0]-a[0]))*Math.cos(r(b[1])); const x = Math.cos(r(a[1]))*Math.sin(r(b[1])) - Math.sin(r(a[1]))*Math.cos(r(b[1]))*Math.cos(r(b[0]-a[0])); return (Math.atan2(y,x)*180/Math.PI+360)%360; };
+  let i = path.findIndex(q => q.t >= tt); if (i <= 0) i = 1; if (i < 0) i = path.length - 1; const a = path[i-1], b = path[i]; const f = Math.max(0, Math.min(1, (tt - a.t) / ((b.t - a.t) || 1)));
+  let k = i; while (k < path.length - 1 && path[k].p[0] === path[k-1].p[0] && path[k].p[1] === path[k-1].p[1]) k++;
+  return { p: [a.p[0] + f*(b.p[0]-a.p[0]), a.p[1] + f*(b.p[1]-a.p[1])], b: bearing(path[k-1].p, path[k].p) }; }
+function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); document.getElementById('tlcap').className = ''; render(); }
+function setCaption(text, cls){ const c = document.getElementById('caption'); c.textContent = text; c.className = text ? cls : ''; }
+function showCard(which, ms, then){
+  const c = document.getElementById('card'); let html = null;
+  if (which === 'cost') html = cardCost(); else if (which === 'speed') html = cardSpeed(); else if (which === 'acc') html = cardAcc();
+  else { const lines = (scn.cards && scn.cards[which]) || []; if (!lines.length){ then && then(); return; } html = lines.map((l, i) => `<div class="${i === 0 ? 'c1' : 'c2'}">${l}</div>`).join(''); }
+  c.innerHTML = html; c.className = 'on'; setTimeout(() => { c.className = ''; then && then(); }, ms);
+}
+const cardCost = () => `<div class="c1">Cost per 1,000 transmissions</div><table>
+  <tr><td>Claude Opus 5.5 (5-shot)</td><td class="n">$9.92</td></tr><tr><td>GPT-5.5 (5-shot)</td><td class="n">$10.40</td></tr><tr><td>GPT-6.1 Terra Pro (5-shot)</td><td class="n">$5.01</td></tr>
+  <tr class="ours"><td>Nemotron-30B + GMAPS LoRA (hosted)</td><td class="n">$0.22</td></tr><tr class="ours"><td>Qwen3-8B + GMAPS LoRA (hosted)</td><td class="n">$0.09</td></tr><tr class="ours"><td>on the DGX Spark, in the tower</td><td class="n">≈ $0 marginal</td></tr></table>
+  <div class="note">a hub does ~10,000 transmissions a day → Opus ≈ $99/day, ours ≈ $2/day or $0 · source: results/test/scores.md</div>`;
+const cardSpeed = () => `<div class="c1">Speed · p50 per transmission</div><table>
+  <tr><td>Claude Opus 5.5</td><td class="n">5.3 s</td></tr><tr><td>GPT-6.1 Terra Pro</td><td class="n">4.1 s</td></tr><tr><td>GPT-5.5</td><td class="n">3.7 s</td></tr>
+  <tr class="ours"><td>Qwen3-8B + GMAPS LoRA, hosted</td><td class="n">0.70 s</td></tr><tr class="ours"><td>DGX Spark · Qwen3-8B + LoRA, bf16 (live panel)</td><td class="n">3.0 s</td></tr><tr class="ours"><td>DGX Spark · Nemotron-3.5-Lightning NVFP4</td><td class="n">1.5 s</td></tr></table>
+  <div class="note">Spark numbers measured on this machine today (STATUS.md): Lightning p50 1518 ms / p95 1977 ms on the dev split · Qwen LoRA median ≈3.0 s live</div>`;
+const cardAcc = () => `<div class="c1">Accuracy · full-record exact, 288 held-out transmissions</div><table>
+  <tr class="ours"><td>Nemotron-30B + GMAPS LoRA (3 epochs)</td><td class="n">69.8%</td></tr><tr><td colspan=2 class="note" style="padding-top:0">tie with Claude Opus (p = 0.41) · 1 epoch: 70.1%, p = 0.30</td></tr>
+  <tr><td>Claude Opus 5.5 (20-shot)</td><td class="n">68.1%</td></tr><tr><td>Claude Opus 5.5 (5-shot)</td><td class="n">67.4%</td></tr>
+  <tr class="ours"><td>Lightning-30B + GMAPS LoRA (3 epochs)</td><td class="n">62.2%</td></tr><tr class="ours"><td>Qwen3-8B + GMAPS LoRA v2</td><td class="n">59.7%</td></tr><tr><td>GPT-6.1 Terra Pro (5-shot)</td><td class="n">56.2%</td></tr></table>
+  <div class="note">source: docs/leaderboard.md · off the shelf: Qwen3-8B 42.4% · Nemotron-30B 39.2%</div>`;
+function drawLookahead(){
+  const la = scn.alert.lookahead;
   document.getElementById('lookahead').innerHTML = MODE === 'asis'
     ? `<tr><td style="color:var(--dim)">no cross-check: each clearance is valid on its own; nothing compares them</td></tr>`
-    : (la.lander_to_d_s != null
-      ? `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>in ~${la.lander_to_d_s} s</td></tr><tr><th>${C} on runway ${scn.runway}</th><td>in ~${la.truck_to_runway_s} s</td></tr><tr><th>predicted overlap</th><td class="bad">yes — same intersection, same seconds</td></tr>`
-      : `<tr><th>${L} at TWY ${scn.crossing_taxiway}</th><td>t≈${la.lander_at_intersection}s</td></tr>` +
-        `<tr><th>landing roll window</th><td>${la.lander_window[0]}–${la.lander_window[1]} s</td></tr>` +
-        `<tr><th>${C} on runway</th><td>${la.crosser_window[0]}–${la.crosser_window[1]} s</td></tr>` +
-        `<tr><th>predicted overlap</th><td class="bad">${la.overlap ? la.overlap[0] + '–' + la.overlap[1] + ' s' : 'none'}</td></tr>`);
+    : `<tr><th>JAZZ 646 at TWY D</th><td>in ~${la.lander_to_d_s} s</td></tr><tr><th>TRUCK 1 on runway 4</th><td>in ~${la.truck_to_runway_s} s</td></tr><tr><th>predicted overlap</th><td class="bad">yes — same intersection, same seconds</td></tr>`;
 }
-function showCard(which, ms, then){
-  const c = document.getElementById('card'); const lines = (scn.cards && scn.cards[which]) || [];
-  if (!lines.length){ then && then(); return; }
-  c.innerHTML = lines.map((l, i) => `<div class="${i === 0 ? 'c1' : 'c2'}">${l}</div>`).join(''); c.className = 'on';
-  setTimeout(() => { c.className = ''; then && then(); }, ms);
+const xpct = tt => `${(100 * (tt - T0) / (T1 - T0)).toFixed(2)}%`;
+function drawTimeline(){
+  const bar = document.getElementById('tlbar'); let h = '<div class="axis"></div>';
+  for (let s = 0; s <= 150; s += 30) h += `<div class="tick" style="left:${xpct(s)}">${wall(s)}</div>`;
+  const lanes = {}; const place = tt => { lanes[tt] = (lanes[tt] || 0) + 1; return lanes[tt] - 1; };
+  for (const [tt, label, sym, col] of TL_EVENTS) { const lane = place(tt); h += `<div class="mk" style="left:${xpct(tt)};top:${lane ? 0 : 18}px;color:${col}"><span class="sym">${sym}</span></div>`; }
+  for (const [arm, , sym] of ARMS) { const a = stepped[arm]; if (!a || a.alert_t == null) continue; const lane = place(a.alert_t); h += `<div class="mk" style="left:${xpct(a.alert_t)};top:${Math.max(0, 18 - lane * 9)}px;color:#3ddc84"><span class="sym">${sym}</span></div>`; }
+  h += '<div class="cursor" id="tlcursor"></div>'; bar.innerHTML = h;
+  const key = []; for (const [arm, label, sym] of ARMS) { const a = stepped[arm]; if (!a) continue;
+    key.push(a.alert_t == null ? `<div class="never">${sym} ${label} · never alerted</div>` : `<div><span style="color:#3ddc84">${sym}</span> ${label} · ${a.clock} · ${a.lead_over_truck_s} s before the truck entered</div>`); }
+  key.push(`<div><span style="color:#39d0ff">▲</span> controller · 23:37:12 first “stop”</div>`, `<div><span style="color:#ff3b5c">■</span> Truck 1 on runway 4 · 23:37:22</div>`);
+  document.getElementById('tlkey').innerHTML = key.join('');
 }
-function reset(){ t = 0; shown.clear(); document.getElementById('txlist').innerHTML = ''; last = null; frozen = false; setCaption(''); render(); }
-function conflictState(){
-  const v = scn.variants[variant];
-  const resolvedAt = v.transmissions.find(x => x.actions.includes('HOLD_SHORT') && x.parsed.role === 'PILOT');
-  const start = scn.alert.t, end = resolvedAt ? resolvedAt.t : (scn.alert.lookahead.overlap ? scn.alert.lookahead.overlap[1] : scn.duration);
-  if (MODE === 'asis') return { active: false, start, end, resolved: false };
-  return { active: t >= start && t < end, start, end, resolved: !!resolvedAt && t >= resolvedAt.t };
-}
-function setCaption(text, cls){ const c = document.getElementById('caption'); c.textContent = text; c.className = text ? cls : ''; }
 function render(){
-  const v = scn.variants[variant];
-  document.getElementById('clock').innerHTML = scn.clock0 ? `<span class="wall">${wall(t)} EDT</span> t = ${t.toFixed(1)} s` : `t = ${t.toFixed(1)} s`;
+  const v = scn.variants.unresolved;
+  document.getElementById('clock').innerHTML = `<span class="wall">${wall(t)} EDT</span> t = ${t.toFixed(1)} s`;
   document.getElementById('scrub').value = t;
-  const cs = conflictState();
-  for (const x of v.transmissions){ const key = variant + ':' + x.t; if (t >= x.t && !shown.has(key)){ shown.add(key); addTx(x); } }
-  const land = v.transmissions.some(x => t >= x.t && x.actions.includes('CLEARED_TO_LAND') && x.parsed.role === 'ATCO');
-  const cross = v.transmissions.some(x => t >= x.t && x.actions.includes('CROSS_RUNWAY') && x.parsed.role === 'ATCO');
-  const vacated = t > scn.alert.lookahead.crosser_window[1] + 2 && !cs.resolved;
+  const cur = document.getElementById('tlcursor'); if (cur) cur.style.left = xpct(Math.min(T1, t));
+  for (const x of v.transmissions){ if (t >= x.t && !shown.has(x.id)){ shown.add(x.id); addTx(x); } }
+  // NOW ON FREQUENCY
+  const onAir = v.transmissions.filter(x => t >= x.t && t < x.t + 4).pop(); const fq = document.getElementById('freq');
+  if (onAir){ if (fq.dataset.id !== onAir.id){ fq.dataset.id = onAir.id; fq.className = ''; void fq.offsetWidth; fq.className = 'on s-' + onAir.speaker;
+      document.getElementById('freqbadge').innerHTML = badge(onAir.speaker); document.getElementById('freqclk').textContent = wall(onAir.t) + ' EDT';
+      document.getElementById('freqwords').textContent = `“${onAir.text}”`; document.getElementById('freqwd').textContent = wordingText(onAir.wording); } }
+  else { fq.className = ''; fq.dataset.id = ''; }
+  // ledger (scripted records)
+  const landing = v.transmissions.find(x => t >= x.t && x.parsed.role === 'ATCO' && x.actions.includes('CLEARED_TO_LAND'));
+  const crossing = v.transmissions.find(x => t >= x.t && x.parsed.role === 'ATCO' && x.actions.includes('CROSS_RUNWAY'));
+  const alertOn = MODE === 'gmaps' && landing && crossing;
   const rows = [];
-  if (MODE === 'asis'){
-    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td>valid</td></tr>`);
-    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>cross at ${scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td>valid</td></tr>`);
-  } else {
-    if (land) rows.push(`<tr><td>${scn.runway}</td><td>cleared to land</td><td>${shortName(landerId())}</td><td class="${cs.active ? 'bad' : 'ok'}">${cs.active ? 'CONFLICT' : 'active'}</td></tr>`);
-    if (cross) rows.push(`<tr><td>${scn.runway}</td><td>${cs.resolved ? 'hold short' : 'cross at ' + scn.crossing_taxiway}</td><td>${shortName(crosserId())}</td><td class="${cs.resolved ? 'ok' : (cs.active ? 'bad' : (vacated ? 'ok' : 'warn'))}">${cs.resolved ? 'holding' : (cs.active ? 'CONFLICT' : (vacated ? 'vacated' : 'pending'))}</td></tr>`);
-  }
+  if (landing) rows.push(`<tr><td>4</td><td>cleared to land</td><td style="color:#fff">JAZZ 646</td><td class="${alertOn ? 'bad' : 'ok'}">${alertOn ? 'CONFLICT' : (MODE === 'asis' ? 'valid' : 'active, on final')}</td></tr>`);
+  if (crossing) rows.push(`<tr><td>4</td><td>cross at D</td><td style="color:#ffb13b">TRUCK 1</td><td class="${alertOn ? 'bad' : 'warn'}">${alertOn ? 'CONFLICT' : 'valid'}</td></tr>`);
   document.getElementById('statebody').innerHTML = rows.join('') || '<tr><td colspan=4 style="color:var(--dim)">no active authorizations</td></tr>';
-  const al = document.getElementById('alert'); const ban = document.getElementById('banner');
-  if (MODE === 'gmaps' && t >= scn.alert.t && !cs.resolved && t < cs.end + 0.01){
-    al.className = 'on'; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner on';
-    al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>warning ${scn.alert.id} at t=${scn.alert.t.toFixed(1)} s · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div><div class="note">${scn.alert.note}</div>`;
-  } else if (MODE === 'gmaps' && cs.resolved && t >= scn.alert.t){ al.className = 'on'; al.style.borderColor = 'var(--green)'; al.style.background = '#0d2a1a'; ban.className = 'banner';
-    al.innerHTML = `<div class="big" style="color:var(--green)">✓ CONFLICT CLEARED — ${shortName(crosserId())} holding short ${scn.runway} at ${scn.crossing_taxiway}</div><div class="note">${scn.alert.note}</div>`;
-  } else { al.className = ''; al.style.borderColor = ''; al.style.background = ''; ban.className = 'banner'; }
-  if (MODE === 'gmaps' && cs.resolved) setCaption('Decision support only; the controller decides.', 'green');
-  const freezeNow = FREEZE != null && t >= FREEZE;
-  if (freezeNow && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay();
-    const cap = (scn.captions && scn.captions[MODE]) || (MODE === 'asis' ? 'AS-IS: two valid clearances, nobody cross-checked them' : '');
-    setCaption(cap, MODE === 'asis' ? 'red' : 'green');
-    setTimeout(() => showCard('close', CARD_MS, () => setTimeout(() => window.__done = true, 300)), 2 * CARD_MS); }
+  const al = document.getElementById('alert'), ban = document.getElementById('banner');
+  if (alertOn){ al.className = 'on'; ban.className = 'banner on'; const la = scn.alert.lookahead;
+    al.innerHTML = `<div class="big">⚠ ${scn.alert.text}</div><div>${wall(scn.alert.t)} EDT · rule ${scn.alert.rule}</div><div>cites ${scn.alert.cites.join(', ')}</div>` +
+      `<div class="rwhy">WHY: RWY 4: landing clearance JAZZ 646 active (short final, ${la.lander_to_d_s} s to D) + crossing clearance TRUCK 1 at D (${la.truck_to_runway_s} s to runway) → overlap → ALERT (JO 7110.65 3-1-3, 3-7-2)</div><div style="color:var(--dim);margin-top:6px">${scn.alert.note}</div>`; }
+  else { al.className = ''; ban.className = 'banner'; }
+  if (FREEZE != null && t >= FREEZE && !frozen){ frozen = true; t = FREEZE; playing = false; setPlay();
+    setCaption(scn.captions[MODE], MODE === 'asis' ? 'red' : 'green');
+    if (MODE === 'gmaps'){ const tc = document.getElementById('tlcap'); tc.className = 'on'; tc.textContent = 'Alert at 23:37:04 — 8 s before the first “stop”, 18 s before Truck 1 entered runway 4. Whether that changes the outcome is for the NTSB to say.'; }
+    if (qs.get('autoplay') === '1') setTimeout(() => showCard('cost', CARD_MS, () => showCard('speed', CARD_MS, () => showCard('acc', CARD_MS, () => showCard('close', CARD_MS, () => setTimeout(() => window.__done = true, 300))))), 2 * CARD_MS);
+    else setTimeout(() => window.__done = true, 500); }
   const now = performance.now();
-  const needMap = map.getLayer('active') && (t !== lastMapT || cs.active !== lastConflict || ((cs.active || frozen) && now - lastMapAt > 66));
-  if (needMap){
-    lastMapT = t; lastMapAt = now; lastConflict = cs.active;
-    const hot = cs.active || (frozen && MODE === 'asis');
-    const blink = hot ? (0.25 + 0.35 * (0.5 + 0.5 * Math.sin(performance.now() / 150))) : 0;
-    map.setPaintProperty('active', 'line-opacity', blink);
-    map.setPaintProperty('zone', 'circle-stroke-opacity', hot ? 0.9 : 0);
-    map.setPaintProperty('zone', 'circle-opacity', hot ? 0.15 + 0.15 * Math.sin(performance.now() / 200) : 0);
-    const feats = v.aircraft.map(a => { const q = posAt(a.path, t); const red = hot; const veh = a.kind === 'vehicle';
-      return { type:'Feature', properties:{ id:a.id, label: a.label || actorName(a.id), bearing:q.b,
-        off: veh ? [-1.2, 1.2] : [1.2, -1.2], anchor: veh ? 'top-right' : 'bottom-left', color: veh ? '#ffd28a' : '#a9ecff',
-        icon: (veh ? 'vehicle-' : 'airliner-') + (red ? 'red' : (veh ? 'amber' : 'cyan')) }, geometry:{ type:'Point', coordinates:q.p } }; });
-    map.getSource('ac').setData({ type:'FeatureCollection', features: feats });
+  if (map.getLayer('active') && (t !== lastMapT || now - lastMapAt > 66)){
+    lastMapT = t; lastMapAt = now; const hot = alertOn || (frozen && MODE === 'asis');
+    map.setPaintProperty('active', 'line-opacity', hot ? 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(now / 150)) : 0);
+    map.setPaintProperty('zone', 'circle-stroke-opacity', hot ? 0.9 : 0); map.setPaintProperty('zone', 'circle-opacity', hot ? 0.15 + 0.15 * Math.sin(now / 200) : 0);
+    map.getSource('ac').setData({ type:'FeatureCollection', features: v.aircraft.map(a => { const q = posAt(a.path, t), veh = a.kind === 'vehicle';
+      return { type:'Feature', properties:{ label: veh ? 'TRUCK 1 · Rescue 35' : 'JAZZ 646 · AC Express 8646', bearing: q.b, off: veh ? [-1.2, 1.2] : [1.2, -1.2], anchor: veh ? 'top-right' : 'bottom-left',
+        color: veh ? '#ffb13b' : '#ffffff', icon: hot ? (veh ? 'veh-red' : 'ac-red') : (veh ? 'veh-amber' : 'ac-white') }, geometry:{ type:'Point', coordinates: q.p } }; }) });
   }
-  if (!frozen && t >= scn.duration && !window.__done) setTimeout(() => window.__done = true, 2000);
-}
-function speakerHtml(x){
-  if (x.speaker === 'TWR' || x.speaker === 'GND') return `<span class="spk atc">${shortName(x.speaker) !== x.speaker ? shortName(x.speaker) : x.speaker + ' · ' + FACILITY[x.speaker]}</span>`;
-  const veh = scn.variants[variant].aircraft.some(a => a.id === x.speaker && a.kind === 'vehicle');
-  return `<span class="spk ${veh ? 'veh' : ''}">${actorName(x.speaker)}</span>`;
 }
 function addTx(x){
-  const el = document.createElement('div'); el.className = 'tx';
-  el.innerHTML = `<div class="meta">${speakerHtml(x)}<span>${scn.clock0 ? wall(x.t) : 't=' + x.t.toFixed(1) + 's'}</span></div>` +
-    `<div class="text">“${x.text}”</div>${x.wording ? `<div class="wording">wording: ${x.wording.startsWith('as reported') ? x.wording : 'standard phraseology (reconstructed)'}</div>` : ''}<pre>${JSON.stringify(x.parsed, null, 1).replace(/\n\s*/g, m => m.length > 1 ? '\n ' : m)}</pre>` +
-    `<div class="chips">${x.actions.map(a => `<span class="chip ${MODE === 'asis' ? 'norule' : (CRIT.has(a) ? 'crit' : '')}">${a}</span>`).join('')}${MODE === 'asis' ? '<span class="chip norule">no rule run</span>' : ''}</div>`;
+  const el = document.createElement('div'); el.className = 'tx s-' + x.speaker; el.id = 'tx-' + x.id.replace(/[^a-z0-9]/gi, '');
+  el.innerHTML = `<div class="meta">${badge(x.speaker)}<span>${wall(x.t)} EDT</span></div>` +
+    `<div class="io"><div><div class="lab">INPUT · radio</div><div class="in">“${esc(x.text)}”</div><div class="wording">${wordingText(x.wording)}</div></div><div class="arrow">→</div>` +
+    `<div><div class="lab">OUTPUT · parser${LIVE ? ' (live)' : ' (scripted)'}</div><div class="out ${LIVE ? 'wait' : ''}">${LIVE ? 'parsing on the Spark…' : pretty(x.parsed)}</div></div></div><div class="checks"></div><div class="why"></div>`;
   const list = document.getElementById('txlist'); list.appendChild(el); list.parentElement.scrollTop = list.parentElement.scrollHeight;
-  if (LIVE && (playing || qs.get('autoplay') !== '1')) liveParse(x);  // autoplay: no call for the pre-roll render
+  if (LIVE && (playing || qs.get('autoplay') !== '1')) liveParse(x, el); else if (!LIVE) fillChecks(x, el, x.parsed, null);
 }
-// ---- live DGX Spark panel: every transmission goes to viz/live_server.py → vLLM :8001 on this machine ----
-let gpuLine = '…', liveModel = 'student';
-function startLive(){
-  const poll = () => fetch('/gpu').then(r => r.json()).then(j => { gpuLine = j.gpu; drawSparkHd(); }).catch(() => { gpuLine = 'proxy offline'; drawSparkHd(); });
-  poll(); setInterval(poll, 2000);
-  const lc = document.getElementById('livecap'); lc.style.display = 'block'; lc.textContent = 'parser live on DGX Spark · Qwen3-8B + GMAPS LoRA · 0-shot';
+const pretty = r => typeof r !== 'object' ? esc(r) : `role: ${r.role}\ncallsigns: ${JSON.stringify(r.callsigns)}\ncommands: ${JSON.stringify(r.commands)}\nvalues: ${JSON.stringify(r.values)}`;
+function fillChecks(x, el, out, res){
+  el.querySelector('.out').className = 'out'; el.querySelector('.out').textContent = pretty(out);
+  if (typeof out === 'object') el.querySelector('.checks').innerHTML = fieldChecks(out, x.parsed).map(([f, ok]) => `<span class="${ok ? 'ck' : 'cx'}">${ok ? '✓' : '✗'} ${f}</span>`).join('') + (res ? `<span class="lat">${Math.round(res.latency_ms)} ms · ${res.tokens_in}→${res.tokens_out} tok</span>` : '');
+  const w = whyLine(x, out); const wl = el.querySelector('.why'); wl.className = 'why ' + (w.cls === 'ok' ? '' : w.cls); wl.innerHTML = esc(w.text).replace(/^(✓|✗)/, m => `<b class="${w.cls === 'ok' ? 'ck' : (w.cls === 'warn' ? 'cxa' : 'cx')}">${m}</b>`);
 }
-function drawSparkHd(){
-  document.getElementById('sparkhd').innerHTML = `model <b>${liveModel}</b> · Qwen3-8B + GMAPS LoRA (merged)<br><b>GB10 · bf16 · vLLM</b> · 0-shot · temp 0<br>GPU util, mem: <span class="gpu">${gpuLine}</span>`;
-  const ms = window.__live.filter(c => c.latency_ms).map(c => c.latency_ms).sort((a, b) => a - b);
-  document.getElementById('sparkstats').textContent = ms.length ? `${ms.length} calls · latency ${Math.round(ms[0])}–${Math.round(ms[ms.length-1])} ms · median ${Math.round(ms[Math.floor((ms.length-1)/2)])} ms` : 'waiting for first transmission…';
+function liveParse(x, el){
+  fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: x.facility || 'laguardia tower' }) })
+    .then(r => r.json()).then(j => { if (j.error) throw new Error(j.error); live[x.id] = j; window.__live.push({ t: x.t, id: x.id, ...j }); fillChecks(x, el, j.parsed, j); drawSparkPanel(); })
+    .catch(e => { el.querySelector('.out').textContent = 'error: ' + e.message; });
 }
-const norm = o => JSON.stringify({ role: o.role, callsigns: (o.callsigns||[]).map(s => s.toLowerCase()), commands: (o.commands||[]).map(s => s.toLowerCase()), values: (o.values||[]).map(s => s.toLowerCase()) });
-function liveParse(x){
-  const el = document.createElement('div'); el.className = 'call pending';
-  el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span>parsing…</span></div>`;
-  const list = document.getElementById('livelist'); list.appendChild(el); list.scrollTop = list.scrollHeight;
-  fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: x.facility || FACILITY[x.speaker] || FACILITY.GND }) })
-    .then(r => r.json()).then(j => {
-      if (j.error) throw new Error(j.error);
-      liveModel = j.model; window.__live.push({ t: x.t, id: x.id, ...j });
-      const same = typeof j.parsed === 'object' && norm(j.parsed) === norm(x.parsed);
-      el.className = 'call';
-      el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s · ${x.speaker}</span><span><span class="ms">${Math.round(j.latency_ms)} ms</span> · ${j.tokens_in}→${j.tokens_out} tok</span></div>` +
-        `<pre>${typeof j.parsed === 'object' ? JSON.stringify(j.parsed) : j.parsed}</pre>` +
-        `<div class="${same ? 'match' : 'diff'}">${same ? '✓ matches the record on the left' : '≠ differs from the scripted record'}${j.json_valid ? '' : ' · invalid JSON'}</div>`;
-      list.scrollTop = list.scrollHeight; drawSparkHd();
-    }).catch(e => { el.className = 'call'; el.innerHTML = `<div class="m"><span>t=${x.t.toFixed(1)}s</span><span class="diff">error: ${e.message}</span></div>`; });
+let gpu = { gpu: '…', util: null, hist: [] };
+function startSpark(){ if (!LIVE) { document.getElementById('spark').innerHTML = '<h2>DGX SPARK</h2><span style="color:var(--dim)">scripted records (live parser off)</span>'; return; }
+  const poll = () => fetch('/gpu').then(r => r.json()).then(j => { gpu = j; drawSparkPanel(); }).catch(() => {}); poll(); setInterval(poll, 1000); }
+function drawSparkPanel(){
+  const ms = window.__live.map(c => c.latency_ms).sort((a, b) => a - b);
+  document.getElementById('spark').innerHTML = `<h2>DGX SPARK · LIVE PARSER</h2><b>Qwen3-8B + GMAPS LoRA</b> · GB10 · bf16 · vLLM · 0-shot<br>GPU: <b>${gpu.gpu}</b><br>${spark(gpu.hist, 300, 34)}<br>` +
+    (ms.length ? `${ms.length} calls · ${Math.round(ms[0])}–${Math.round(ms[ms.length-1])} ms · median ${Math.round(ms[Math.floor((ms.length-1)/2)])} ms` : 'waiting for the first transmission…');
 }
-function tick(now){
-  if (playing){ if (last != null) t = Math.min(scn.duration, t + (now - last) / 1000 * speed); if (t >= scn.duration) playing = false, setPlay(); }
-  last = now; if (scn) render(); requestAnimationFrame(tick);
-}
+function spark(hist, w, h){ if (!hist || hist.length < 2) return ''; const n = hist.length, pts = hist.map(([, u], i) => `${(i / (n - 1) * w).toFixed(1)},${(h - u / 100 * h).toFixed(1)}`).join(' ');
+  return `<svg width="${w}" height="${h}" style="background:#0b1222;border:1px solid #1d2a44;border-radius:4px"><polyline fill="none" stroke="#76b900" stroke-width="2" points="${pts}"/></svg>`; }
+function tick(now){ if (playing){ if (last != null) t = Math.min(scn.duration, t + (now - last) / 1000 * speed); } last = now; if (scn && VIEW === 'monitor') render(); requestAnimationFrame(tick); }
 function setPlay(){ document.getElementById('play').textContent = playing ? '❚❚ pause' : '▶ play'; }
 document.getElementById('play').onclick = () => { if (frozen) return; playing = !playing; setPlay(); };
-document.getElementById('restart').onclick = () => { reset(); };
+document.getElementById('restart').onclick = () => reset();
 document.getElementById('scrub').oninput = e => { t = parseFloat(e.target.value); frozen = false; shown.clear(); document.getElementById('txlist').innerHTML = ''; render(); };
-document.getElementById('speed').onchange = e => speed = parseFloat(e.target.value);
-document.getElementById('variant').onchange = e => { variant = e.target.value; reset(); };
+
+// ---------- ?view=log : the historical input → output log, every line through the live parser ----------
+async function bootLog(){
+  document.body.className = 'view-log'; const lines = scn.variants.unresolved.transmissions; const V = document.getElementById('view');
+  V.innerHTML = `<h1>GMAPS · TRANSMISSION LOG · KLGA RWY 4, March 22, 2026</h1><div class="sub">input → output, every transmission through the live parser on the DGX Spark (Qwen3-8B + GMAPS LoRA, :8001, 0-shot) · ✓/✗ vs the scripted record · ● green = matches · ● amber = differs, no ledger effect · ● red = differs, ledger-visible</div>` +
+    `<table><thead><tr><th>clock</th><th>speaker</th><th>input</th><th>output</th><th>check</th><th>ms</th><th></th></tr></thead><tbody id="logbody"></tbody></table>`;
+  const body = document.getElementById('logbody');
+  for (const x of lines){
+    const tr = document.createElement('tr'); tr.innerHTML = `<td>${wall(x.t)}</td><td>${badge(x.speaker)}</td><td style="font-style:italic;max-width:330px">“${esc(x.text)}”<div class="wording">${wordingText(x.wording)}</div></td><td class="o" style="color:var(--dim)">parsing…</td><td class="c"></td><td class="m"></td><td class="d"></td>`; body.appendChild(tr);
+    try { const j = await fetch('/parse', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ text: x.text, facility: x.facility }) }).then(r => r.json());
+      window.__live.push({ t: x.t, id: x.id, ...j }); const o = j.parsed;
+      tr.querySelector('.o').style.color = '#cfe8b8'; tr.querySelector('.o').style.maxWidth = '420px'; tr.querySelector('.o').textContent = typeof o === 'object' ? `${o.role} · ${JSON.stringify(o.callsigns)} · ${JSON.stringify(o.commands)} · ${JSON.stringify(o.values)}` : o;
+      const ch = typeof o === 'object' ? fieldChecks(o, x.parsed) : []; tr.querySelector('.c').innerHTML = ch.map(([f, ok]) => `<span class="${ok ? 'ck' : 'cx'}">${ok ? '✓' : '✗'}${f[0]}</span>`).join(' ');
+      tr.querySelector('.m').innerHTML = `<span class="lat">${Math.round(j.latency_ms)}</span>`;
+      const w = whyLine(x, o); tr.querySelector('.d').innerHTML = `<span class="dot" style="background:${w.cls === 'ok' ? '#3ddc84' : (w.cls === 'warn' ? '#ffb13b' : '#ff3b5c')}" title="${esc(w.text)}"></span>`;
+    } catch (e) { tr.querySelector('.o').textContent = 'error ' + e.message; }
+  }
+  window.__done = true;
+}
+// ---------- ?view=spark : the machine itself ----------
+async function bootSpark(){
+  document.body.className = 'view-spark'; const V = document.getElementById('view'); const calls = [];
+  V.innerHTML = `<h1>DGX SPARK · GB10 · LIVE</h1><div class="sub">three model servers on one desk-side machine · vLLM · the parser for the runway monitor runs here, no internet</div>
+    <div class="sp-grid"><div class="sp-box"><h2>GPU UTILISATION · nvidia-smi, 1 s</h2><div class="sp-big" id="sputil">–</div><div id="spline"></div><div id="spmem" style="color:var(--dim);margin-top:6px"></div></div>
+    <div class="sp-box"><h2>MODEL ENDPOINTS</h2><div id="speps"></div><h2 style="margin-top:12px">CALLS</h2><div id="spcount" class="sp-big">0</div><div id="sptok" style="color:var(--dim)"></div></div>
+    <div class="sp-box" style="grid-column:1/3"><h2>PER-CALL LATENCY · LGA lines through each endpoint</h2><div class="bars" id="spbars"></div></div></div>`;
+  const draw = () => {
+    document.getElementById('sputil').textContent = gpu.util != null ? gpu.util + ' %' : '–';
+    document.getElementById('spline').innerHTML = spark(gpu.hist, 760, 90); document.getElementById('spmem').textContent = gpu.gpu;
+    document.getElementById('spcount').textContent = calls.length;
+    const ti = calls.reduce((s, c) => s + (c.tokens_in || 0), 0), to = calls.reduce((s, c) => s + (c.tokens_out || 0), 0); document.getElementById('sptok').textContent = `tokens in ${ti} · out ${to}`;
+    const mx = Math.max(4000, ...calls.map(c => c.latency_ms));
+    document.getElementById('spbars').innerHTML = calls.slice(-16).map(c => `<div><span style="width:210px;color:var(--dim)">:${c.port} ${c.model.slice(0, 22)}</span><span class="b" style="width:${(c.latency_ms / mx * 520).toFixed(0)}px;background:${c.port === 8001 ? '#76b900' : (c.port === 8002 ? '#39d0ff' : '#ffb13b')}"></span><span>${Math.round(c.latency_ms)} ms · ${c.tokens_in}→${c.tokens_out}</span></div>`).join('');
+  };
+  const pollG = () => fetch('/gpu').then(r => r.json()).then(j => { gpu = j; draw(); }).catch(() => {});
+  const pollE = () => fetch('/endpoints').then(r => r.json()).then(eps => { document.getElementById('speps').innerHTML = eps.map(e => `<div class="ep"><span class="l" style="background:${e.up ? '#3ddc84' : '#ff3b5c'}"></span>:${e.port} · ${e.name} · ${e.up ? 'up' : 'down'}</div>`).join(''); }).catch(() => {});
+  pollG(); pollE(); setInterval(pollG, 1000); setInterval(pollE, 3000);
+  if (qs.get('load') === '1'){
+    await new Promise(r => setTimeout(r, 2500));
+    const lines = scn.variants.unresolved.transmissions;
+    await Promise.all([8001, 8002, 8004].map(async port => { for (const x of lines){
+      try { const j = await fetch('/parse_on', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ port, text: x.text, facility: x.facility }) }).then(r => r.json());
+        if (!j.error){ calls.push(j); window.__live.push(j); draw(); } } catch (e) {} } }));
+    setTimeout(() => window.__done = true, 2500);
+  }
+}
 </script>
 </body>
 </html>
