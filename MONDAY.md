@@ -9,6 +9,10 @@ Claude Opus 5.5 5-shot: 84.7% full record · our 1-epoch LoRA 0-shot: 70.6% · G
 Our clear win is value spans (+25). Opus is better or tied on everything operational. **Baseline = Opus 5.5** (strongest).
 Headline is decided at 12:30 by the paired CI on test — three versions are pre-written in §Headline below.
 
+## Pre-registered (docs/preregistration.md, committed before 10:30)
+Baseline Opus 5.5 5-shot · primary metric full-record exact on 288 · paired bootstrap CI decides the headline · one revision policy.
+Cloud has the v2 mix (7,857 ex) and the Fireworks SDK route ready; test file staged with hash verified.
+
 ## Before 09:00
 
 - **F:** OpenRouter +$10 credit. Teammate on the roster. Go.
@@ -39,6 +43,8 @@ Headline is decided at 12:30 by the paired CI on test — three versions are pre
 | F | Fireworks SFT: base `qwen3-8b`, dataset `atc-mix-v2`, eval `atc-dev`, **3 epochs**, lr 1e-4, LoRA r16, `--turbo` | 20–40 min |
 | C | `scripts/10_eval_test.sh accounts/fireworks/models/qwen3-8b 5` with `EXTRA='{"chat_template_kwargs":{"enable_thinking":false}}'` (Fireworks key) | open-base arm |
 | T | `BASE_URL=http://<spark>:8001/v1 API_KEY=none scripts/10_eval_test.sh atc-qwen3-8b 0 spark` | on-prem dry-run adapter on test |
+| F (optional, parallel) | second Fireworks SFT on `qwen3-4b` (same dataset, 3 epochs) — the fast/cheap student for the latency story | +$3 |
+| Spark (when back) | re-serve the merged model with `--quantization fp8` and rerun `08_latency_bench.py` — bf16 is bandwidth-bound at ~3 s; FP8 should roughly halve it | on-prem latency row |
 
 ## 11:15–12:30 — fine-tune on test, one revision, freeze
 
