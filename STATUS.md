@@ -134,3 +134,24 @@ Fine-tune notes: TRL + PEFT in `nvcr.io/nvidia/pytorch:25.11-py3` (container `at
 - **Memory:** to fit three servers, Lightning was restarted at GPU_UTIL 0.33 (was 0.55), the student is at 0.25 and the base Qwen at 0.2. About 95 GiB is in GPU processes.
 - **Caveats:** The per-arm markers at t=124 stack closely on the timeline bar; the KEY lists them all.
 - **Left running:** `vllm-student` :8001, `vllm-nemotron-lightning-3.5-30b` :8002, `vllm-qwen3-8b-base` :8004, `viz/live_server.py` :8090.
+
+## Package 5 (Nov 2, 16:10 PT)
+- **Landed:**
+  1. GMAPS mode no longer stops at 23:37:04. The alert banner and red alert card stay up through both stop calls (23:37:12, 23:37:20), and the "Alert at 23:37:04 — 8 s before the first 'stop', 18 s before Truck 1 entered runway 4 …" line stays under the timeline from 23:37:04 on. It freezes at **23:37:22** (truck at the runway edge; no collision) with "23:37:22 — Truck 1 enters runway 4 · GMAPS alert up since 23:37:04". The as-is clip is unchanged.
+  3. The accuracy card is now `docs/leaderboard.png`, copied to `viz/lga/leaderboard.png` so the page server can serve it.
+  4. Live-panel line: "best model on the benchmark: Nemotron-30B + GMAPS LoRA, 70.1% (Fireworks) · running here: Qwen3-8B + GMAPS LoRA v1, 55.2% (v2, 59.7%, is hosted)".
+  5. The cost card has an "Audio stays in the building" row: ✓ DGX Spark (green), ✗ hosted LoRA and ✗ frontier APIs (red), with no yes/no wording.
+  6. **Re-recorded `docs/video/lga_04_gmaps_2x.mp4`** (92.7 s, 1440×900, 25 fps, recorded at 1× and sped up 2×). Commit ae9fc4e. Live LoRA latencies 2.0–3.7 s (8 calls).
+- **Cut points in `lga_04_gmaps_2x.mp4` (seconds into the 2× file, measured by the page, not estimated):**
+  - 0–3.1 title card
+  - **65.1 alert (23:37:04)**
+  - 69.1 first stop call (23:37:12)
+  - 73.1 second stop call (23:37:20)
+  - **74.1 freeze (23:37:22)**
+  - ~79–82 cost card
+  - ~82–85 speed card
+  - ~85–88 results card (leaderboard.png)
+  - ~88–92.7 memorial card
+  - The stop-call times are computed from the alert mark (1 scenario second = 0.5 video seconds); the card times come from frame sampling.
+- **Not done:** the airport picker (KBOS/KATL fetch, dropdown) and `airport_picker_2x.mp4`. It wasn't started, because the 16:15 cut-off left no room for two Overpass fetches (the KLGA fetch took over 5 minutes today).
+- **Left running for the live demo:** :8001 (`vllm-student`, Qwen3-8B + LoRA v1), :8002 (Lightning NVFP4), :8004 (Qwen3-8B base), :8090 (`viz/live_server.py`). Open `http://<spark>:8090/?live=1` for the monitor (GMAPS mode by default; `&mode=asis` for as-is), `?view=log`, and `?view=spark&load=1`.
