@@ -99,7 +99,7 @@ def main():
                                 "lander_to_d_s": 20, "truck_to_runway_s": 18},
                   "cites": ["JO 7110.65 3-1-3", "JO 7110.65 3-7-2"],
                   "note": "Decision support only; the controller decides."},
-        "freeze": {"asis": 142.0, "gmaps": 124.0},
+        "freeze": {"asis": 142.0, "gmaps": 142.0},  # package 5: GMAPS runs on through both stop calls to 23:37:22
         "captions": {"asis": "23:37:22 — Truck 1 enters runway 4. NTSB DCA26MA161, preliminary.",
                      "gmaps": "Alert at 23:37:04 — 18 seconds before Truck 1 entered the runway. Whether that changes the outcome is for the NTSB to say. Decision support only; the controller decides."},
         "cards": {"open": ["LaGuardia, March 22, 2026",
