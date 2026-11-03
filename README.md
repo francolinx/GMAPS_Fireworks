@@ -236,7 +236,7 @@ scripts/11_score_test.sh results/test/<baseline>.preds.jsonl results/test/*.pred
 
 ## 8. Team
 
-Franco Plathottathil (`francolinx`) — project lead: GMAPS, data, Spark training and on-prem arms, submission. *[teammate name, handle — role]*. Cloud-side benchmark runs, scoring, README and deck were produced with Claude (Anthropic) under the team's direction.
+Franco Plathottathil (`francolinx`) — project lead: GMAPS, data, Spark training and on-prem arms, submission. Octavian Cosmin — teammate: Fireworks account and credits, review. Cloud-side benchmark runs, scoring, README and deck were produced with Claude (Anthropic) under the team's direction.
 
 ## 9. Pre-existing work and AI assistance (disclosure)
 
